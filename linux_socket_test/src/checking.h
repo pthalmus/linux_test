@@ -10,7 +10,6 @@
 
 #include<vector>
 #include<algorithm>
-#include<cstring>
 
 int calculrating(std::vector<int> pop_num)
 {

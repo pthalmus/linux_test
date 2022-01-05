@@ -103,6 +103,7 @@ void *handle_clnt(void *arg)
     int str_len=0, i;
     char msg[BUF_SIZE];
     char *ptr;
+    char *context;
     static std::vector<int> pop_Item;
 
 
@@ -110,7 +111,7 @@ void *handle_clnt(void *arg)
     {
     	if(msg[0] == 'c') //plane text
     	{
-    		msg = strtok(NULL, "&");
+    		msg = strtok_s(NULL, "&", &context);
     		send_msg(msg, str_len);
     	}
     	else if(msg[0] == 's') // host start
@@ -123,12 +124,12 @@ void *handle_clnt(void *arg)
     		pthread_mutex_lock(&mutx);
     		int check;
     		std::vector<int> player_hand;
-    		ptr = strtok(msg, "&");
-    		ptr = strtok(NULL, "&");
+    		ptr = strtok_s(msg, "&", &context);
+    		ptr = strtok_s(NULL, "&", &context);
     		check = atoi(ptr);
     		while(ptr != NULL)
     		{
-    			ptr = strtok(NULL, "&");
+    			ptr = strtok_s(NULL, "&", &context);
     			player_hand.push_back(atoi(ptr));
     		}
     		player[check].set_Hand(player_hand);
@@ -139,10 +140,10 @@ void *handle_clnt(void *arg)
     		int check;
     		int win;
     		pthread_mutex_lock(&mutx);
-    		ptr = strtok(msg, "&");
-    		ptr = strtok(NULL, "&");
+    		ptr = strtok_s(msg, "&", &context);
+    		ptr = strtok_s(NULL, "&", &context);
     		check = atoi(ptr);
-    		ptr = strtok(NULL, "&");
+    		ptr = strtok_s(NULL, "&", &context);
     		player[check].pop(atoi(ptr));
     		pop_Item.push_back(atoi(ptr));
     		pop_Count++;
