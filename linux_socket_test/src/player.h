@@ -14,19 +14,19 @@
 class Player {
 private:
 	int player_num;
-	char player_Name[20];
+	int room_Number = 0;
+	char* player_Name;
 	int last_pop;
-	int win_Stack=0;
+	int win_Stack = 0;
 	std::vector<int> hand;
 public:
 	void pop(int index);
 	void add(int add);
 	std::vector<int> get_Hand();
-	void set_Hand(std::vector<int> submit_hand);
 	int get_Player_Num();
 	void set_Player_Num(int num);
-	char get_Player_Name();
-	void set_Player_Name(char name[]);
+	char* get_Player_Name();
+	void set_Player_Name(char* name);
 	int get_Last_Pop();
 	int get_Win_Stack();
 	void up_Win_Stack();
@@ -35,9 +35,9 @@ public:
 
 void Player::pop(int index)
 {
-	for(std::vector<int>::iterator iter = hand.begin(); iter!=hand.end(); iter++)
+	for (std::vector<int>::iterator iter = hand.begin(); iter != hand.end(); iter++)
 	{
-		if(*iter == index)
+		if (*iter == index)
 		{
 			hand.erase(iter);
 			this->last_pop = index;
@@ -54,25 +54,21 @@ std::vector<int> Player::get_Hand()
 {
 	return hand;
 }
-void Player::set_Hand(std::vector<int> submit_hand)
-{
-	hand.swap(submit_hand);
-}
 int Player::get_Player_Num()
 {
 	return player_num;
 }
-void Player::set__Player_Num(int num)
+void Player::set_Player_Num(int num)
 {
 	this->player_num = num;
 }
-char Player::get_Player_Name()
+char* Player::get_Player_Name()
 {
 	return player_Name;
 }
-void Player::set_Player_Name(char name[])
+void Player::set_Player_Name(char* name)
 {
-	this->player_Name = name;
+	player_Name = name;
 }
 int Player::get_Last_Pop()
 {

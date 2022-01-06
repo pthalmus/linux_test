@@ -8,15 +8,15 @@
 
 #include <iostream>
 #include <unistd.h>
-#include <cstring>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <time.h>
 #include <vector>
-#include <checking.h>
-#include <player.h>
+#include "checking.h"
+#include "player.h"
+#include <string.h>
 
 #define BUF_SIZE 256
 #define MAX_CLNT 8
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
 
 		pthread_mutex_lock(&mutx);
 		player[clnt_cnt] = Player();
-		player[clnt_cnt].set__Player_Num(clnt_cnt);
+		player[clnt_cnt].set_Player_Num(clnt_cnt);
 		clnt_socks[clnt_cnt++]=clnt_sock;
 		pthread_mutex_unlock(&mutx);
 
