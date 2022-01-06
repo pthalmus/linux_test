@@ -32,6 +32,11 @@ int clnt_socks[MAX_CLNT];
 pthread_mutex_t mutx;
 int pop_Count =0;
 
+char start_Msg[] = "game start";
+char win_Msg[] = "win";
+char lose_Msg[] = "lose";
+char draw_Msg[] = "draw";
+
 Player player[MAX_CLNT];
 
 int main(int argc, char* argv[]) {
@@ -112,33 +117,29 @@ void *handle_clnt(void *arg)
     	if(msg[0] == 'c') //plane text
     	{
     		msg = strtok_s(NULL, "&", &context);
-    		send_msg(msg, str_len);
+    		send_msg(msg, sizeof(msg));
     	}
     	else if(msg[0] == 's') // host start
     	{
-    		msg = "game start";
-    		send_msg(msg, sizeof(msg));
+    		send_msg(start_Msg, sizeof(start_Msg));
     	}
     	else if(msg[0] == 'i') // player send hand
 		{
-    		pthread_mutex_lock(&mutx);
     		int check;
-    		std::vector<int> player_hand;
     		ptr = strtok_s(msg, "&", &context);
     		ptr = strtok_s(NULL, "&", &context);
     		check = atoi(ptr);
+    		ptr = strtok_s(NULL, "&", &context);
     		while(ptr != NULL)
     		{
+    			player[check].add(atoi(ptr));
     			ptr = strtok_s(NULL, "&", &context);
-    			player_hand.push_back(atoi(ptr));
     		}
-    		player[check].set_Hand(player_hand);
-    		pthread_mutex_unlock(&mutx);
 		}
     	else if(msg[0] == 'p') // player send card
     	{
-    		int check;
-    		int win;
+    		int check=0;
+    		int win=0;
     		pthread_mutex_lock(&mutx);
     		ptr = strtok_s(msg, "&", &context);
     		ptr = strtok_s(NULL, "&", &context);
@@ -158,21 +159,18 @@ void *handle_clnt(void *arg)
 					{
 						if(player[i].get_Last_Pop() == win)
 						{
-							msg = "win";
 							player[i].up_Win_Stack();
-							send_msg(msg, sizeof(msg));
+							send_msg(win_Msg, sizeof(win_Msg));
 						}
 						else
 						{
-							msg="lose";
-							send_msg(msg, sizeof(msg));
+							send_msg(lose_Msg, sizeof(lose_Msg));
 						}
 					}
     			}
     			else
     			{
-    				msg ="nobody win";
-    				send_msg(msg, sizeof(msg));
+    				send_msg(draw_Msg, sizeof(draw_Msg));
     			}
 
     			std::vector<int>().swap(pop_Item);

@@ -14,7 +14,7 @@
 class Player {
 private:
 	int player_num;
-	char player_Name[];
+	char player_Name[20];
 	int last_pop;
 	int win_Stack=0;
 	std::vector<int> hand;
