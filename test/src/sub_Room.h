@@ -22,11 +22,6 @@ private:
 	int max_Player = 8;
 	std::vector<Player> player;
 public:
-	subRoom(int num, char* name)
-	{
-		room_Number = num;
-		room_Name = name;
-	}
 	subRoom(int num, char* name, int pMNum)
 	{
 		room_Number = num;
@@ -45,6 +40,7 @@ public:
 	void block_Player();
 	void free_Block_Player();
 	int get_Room_Number();
+	bool invite_Player(Player online_Player);
 };
 
 bool subRoom::add_Player(Player add_player)
@@ -81,6 +77,11 @@ void subRoom::free_Block_Player()
 int subRoom::get_Room_Number()
 {
 	return room_Number;
+}
+bool subRoom::invite_Player(Player online_Player)
+{
+
+	return false;
 }
 
 

@@ -30,6 +30,8 @@ public:
 	int get_Last_Pop();
 	int get_Win_Stack();
 	void up_Win_Stack();
+	void set_Room_Num(int num);
+	int get_Room_Num();
 
 };
 
@@ -42,6 +44,10 @@ void Player::pop(int index)
 			hand.erase(iter);
 			this->last_pop = index;
 			break;
+		}
+		else
+		{
+			last_pop = 0;
 		}
 	}
 }
@@ -82,7 +88,75 @@ void Player::up_Win_Stack()
 {
 	this->win_Stack++;
 }
+void Player::set_Room_Num(int num)
+{
+	this->room_Number = num;
+}
+int Player::get_Room_Num()
+{
+	return room_Number;
+}
 
+class Player_Bot : public Player
+{
+private:
+	int last_pop;
+	int win_Stack = 0;
+	std::vector<int> hand;
+public:
+	void set_Random_Hand();
+	int pop_Random(int num, int token);
+};
+
+void Player_Bot::set_Random_Hand()
+{
+	srand(time(NULL));
+
+	for (int i = 0; i < 6; i++)
+	{
+		hand.push_back(rand() % 15 + 1);
+		for (int j = 0; j < i; j++)
+		{
+			if (hand[i] == hand[j])
+			{
+				hand.pop_back();
+				i--;
+			}
+		}
+	}
+}
+int Player_Bot::pop_Random(int num, int token)
+{
+	int item;
+	int count = 6;
+	int check = 0;
+	srand(time(NULL));
+	while (1)
+	{
+		item = rand() % count + 1;
+		if (token == 0 && hand.at(item) >= num) // token == 0 : above
+		{
+			pop(hand.at(item));
+			count--;
+			return last_pop;
+		}
+		else if (token == 1 && hand.at(item) <= num) // token == 1 : below
+		{
+			pop(hand.at(item));
+			count--;
+			return last_pop;
+		}
+		else
+		{
+			check++;
+		}
+		if (check > count * 2)
+		{
+			break;
+		}
+	}
+	return 0;
+}
 
 
 #endif /* PLAYER_H_ */

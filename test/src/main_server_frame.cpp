@@ -7,20 +7,23 @@
 #include<netinet/in.h>
 #include<pthread.h>
 #include<time.h>
+#include<player.h>
 
 
 #define BUF_SIZE 100
 #define MAX_CLNT 100
 #define MAX_IP 30
+#define MAX_ROOM 50
+#define LOBBY 0
 
 void * handle_clnt(void *arg);
-void send_msg(char *msg, int len);
+void send_msg(char *msg, int len, int room_Num);
 void error_handling(char *msg);
 
 
 
-int clnt_cnt=0;
-int clnt_socks[MAX_CLNT];
+int clnt_cnt[MAX_ROOM]=0;
+int clnt_socks[MAX_ROOM][MAX_CLNT];
 pthread_mutex_t mutx;
 
 int main(int argc, char *argv[])
@@ -65,7 +68,7 @@ int main(int argc, char *argv[])
         clnt_sock = accept(serv_sock, (struct sockaddr*) &clnt_addr, &clnt_addr_sz);
 
         pthread_mutex_lock(&mutx);
-        clnt_socks[clnt_cnt++]=clnt_sock;
+        clnt_socks[LOBBY][clnt_cnt[LOBBY]++]=clnt_sock;
         pthread_mutex_unlock(&mutx);
 
         pthread_create(&t_id, NULL, handle_clnt, (void*)&clnt_sock);
@@ -73,7 +76,7 @@ int main(int argc, char *argv[])
         printf(" Connected client IP : %s ", inet_ntoa(clnt_addr.sin_addr));
         printf("(%d-%d-%d %d:%d)\n", t->tm_year+1900, t->tm_mon+1, t->tm_mday,
         t->tm_hour, t->tm_min);
-        printf(" chatter (%d/100)\n", clnt_cnt);
+        printf(" chatter (%d/100)\n", clnt_cnt[LOBBY]);
     }
     close(serv_sock);
     return 0;
@@ -85,19 +88,21 @@ void *handle_clnt(void *arg)
     int str_len=0, i;
     char msg[BUF_SIZE];
 
+    Player player = Player();
+
     while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
     {
-        send_msg(msg, str_len);
+        send_msg(msg, str_len, player.get_Room_Num());
     }
 
     pthread_mutex_lock(&mutx);
     for (i=0; i<clnt_cnt; i++)
     {
-    	if (clnt_sock==clnt_socks[i])
+    	if (clnt_sock==clnt_socks[player.get_Room_Num][i])
     	{
-    		while(i<clnt_cnt-1)
+    		while(i<clnt_cnt[player.get_Room_Num]-1)
     		{
-    			clnt_socks[i]=clnt_socks[i+1];
+    			clnt_socks[player.get_Room_Num][i]=clnt_socks[player.get_Room_Num][i+1];
     			i++;
     		}
     		break;
@@ -109,12 +114,12 @@ void *handle_clnt(void *arg)
     return NULL;
 }
 
-void send_msg(char* msg, int len)
+void send_msg(char* msg, int len, int room_Num)
 {
     int i;
     pthread_mutex_lock(&mutx);
     for (i=0; i<clnt_cnt; i++)
-        write(clnt_socks[i], msg, len);
+        write(clnt_socks[room_Num][i], msg, len);
     pthread_mutex_unlock(&mutx);
 }
 

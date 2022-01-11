@@ -16,7 +16,7 @@
 #include <vector>
 #include "checking.h"
 #include "player.h"
-#include <string.h>
+#include <cstring>
 
 #define BUF_SIZE 256
 #define MAX_CLNT 8

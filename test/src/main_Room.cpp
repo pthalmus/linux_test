@@ -8,7 +8,7 @@
 #include<iostream>
 #include<vector>
 #include<algorithm>
-#include<string.h>
+#include<cstring>
 #include<sub_Room.h>
 
 class main_Room {
