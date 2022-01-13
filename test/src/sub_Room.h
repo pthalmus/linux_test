@@ -39,8 +39,11 @@ public:
 	void pop_Player(Player pop_Player);
 	void block_Player();
 	void free_Block_Player();
-	int get_Room_Number();
 	bool invite_Player(Player online_Player);
+	int get_Room_Number();
+	int get_Room_PWD();
+	int get_Max_Player();
+	char* get_Room_Name();
 };
 
 bool subRoom::add_Player(Player add_player)
@@ -74,14 +77,33 @@ void subRoom::free_Block_Player()
 		max_Player++;
 	}
 }
-int subRoom::get_Room_Number()
-{
-	return room_Number;
-}
 bool subRoom::invite_Player(Player online_Player)
 {
 
 	return false;
+}
+int subRoom::get_Room_Number()
+{
+	return room_Number;
+}
+int subRoom::get_Room_PWD()
+{
+	if(room_Pwd == NULL)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+int subRoom::get_Max_Player()
+{
+	return max_Player;
+}
+char* subRoom::get_Room_Name()
+{
+	return room_Name;
 }
 
 

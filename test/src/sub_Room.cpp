@@ -9,19 +9,15 @@
 #include<algorithm>
 #include<player.h>
 
+
 class subRoom {
 private:
 	int room_Number=0;
-	char room_Pwd[10] = NULL;
-	char room_Name[30] = NULL;
+	char* room_Pwd = NULL;
+	char* room_Name = NULL;
 	int max_Player = 8;
 	std::vector<Player> player;
 public:
-	subRoom(int num, char* name)
-	{
-		room_Number = num;
-		room_Name = name;
-	}
 	subRoom(int num, char* name, int pMNum)
 	{
 		room_Number = num;
@@ -39,6 +35,11 @@ public:
 	void pop_Player(Player pop_Player);
 	void block_Player();
 	void free_Block_Player();
+	bool invite_Player(Player online_Player);
+	int get_Room_Number();
+	int get_Room_PWD();
+	int get_Max_Player();
+	char* get_Room_Name();
 };
 
 bool subRoom::add_Player(Player add_player)
@@ -72,4 +73,31 @@ void subRoom::free_Block_Player()
 		max_Player++;
 	}
 }
+bool subRoom::invite_Player(Player online_Player)
+{
 
+	return false;
+}
+int subRoom::get_Room_Number()
+{
+	return room_Number;
+}
+int subRoom::get_Room_PWD()
+{
+	if(room_Pwd == NULL)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+int subRoom::get_Max_Player()
+{
+	return max_Player;
+}
+char* subRoom::get_Room_Name()
+{
+	return room_Name;
+}

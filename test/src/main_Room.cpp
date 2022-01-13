@@ -16,13 +16,13 @@ private:
 	std::vector<subRoom> room_Vector;
 	std::vector<int> room_num;
 public:
-	std::string show_Room_Detail();
+	char show_Room_Detail();
 	void create_Sub_Room(char* msg);
 };
 
-std::string main_Room::show_Room_Detail()
+char main_Room::show_Room_Detail()
 {
-	std::string details;
+	char details[100];
 
 
 	return details;
@@ -45,10 +45,12 @@ void main_Room::create_Sub_Room(char* msg)
 	if(count_Details == 3)
 	{
 		subRoom sb = subRoom(atoi(input_Item.at(0)),input_Item.at(1),atoi(input_Item.at(2)));
+		room_Vector.push_back(sb);
 	}
 	else if( count_Details == 4)
 	{
 		subRoom sb = subRoom(atoi(input_Item.at(0)),input_Item.at(1), input_Item.at(2),atoi(input_Item.at(3)));
+		room_Vector.push_back(sb);
 	}
-	room_Vector.push_back((const subRoom)sb);
+
 }

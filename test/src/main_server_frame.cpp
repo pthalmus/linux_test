@@ -108,6 +108,12 @@ void *handle_clnt(void *arg)
 		case 'f': // associate with friends
 			break;
 		case 'r': // get room details
+			std::vector<char> detail_Msg;
+			for(int i=0; i<MAX_ROOM; i++)
+			{
+				detail_Msg.push_back(Main_Room.show_Room_Detail(i));
+			}
+			send_Vector(detail_Msg, sizeof(detail_Msg), player);
 			break;
 		case 'm': // make room
 			Main_Room.create_Sub_Room(msg);
@@ -236,6 +242,18 @@ void send_msg(char* msg, int len, Player player)
 	}
 	pthread_mutex_unlock(&mutx);
 
+}
+
+void send_Vector(std::vector<char> msg, int len, Player player)
+{
+	int i;
+
+	pthread_mutex_lock(&mutx);
+	for (i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+	{
+		write(clnt_socks[player.get_Room_Num()][i], (const void*)&msg, len);
+	}
+	pthread_mutex_unlock(&mutx);
 }
 
 void

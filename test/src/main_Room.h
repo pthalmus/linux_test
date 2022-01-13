@@ -19,14 +19,34 @@ private:
 	std::vector<subRoom> room_Vector;
 	std::vector<int> room_num;
 public:
-	std::string show_Room_Detail();
+	char show_Room_Detail(int room_Num);
 	void create_Sub_Room(char* msg);
 };
 
-std::string main_Room::show_Room_Detail()
+char main_Room::show_Room_Detail(int room_Num)
 {
-	std::string details;
-
+	char details[100];
+	char pwd[10];
+	int room_Max_People;
+	char* room_Name;
+	for(int i = 0; i<room_Vector.size(); i++)
+	{
+		subRoom temp_Room = room_Vector.at(i);
+		if(temp_Room.get_Room_Number() == room_Num)
+		{
+			if(temp_Room.get_Room_PWD() == 0)
+			{
+				pwd = "false";
+			}
+			else
+			{
+				pwd = "true";
+			}
+			room_Max_People = temp_Room.get_Max_Player();
+			room_Name = temp_Room.get_Room_Name();
+			sprintf(details, "g&%d&%s&%s%d",room_Num, room_Name, pwd, room_Max_People );
+		}
+	}
 
 	return details;
 }

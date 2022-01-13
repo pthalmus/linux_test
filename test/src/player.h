@@ -21,6 +21,7 @@ private:
 	int win_Stack = 0;
 	int bot_Count = 0;
 	std::vector<int> hand;
+	bool loosing = false;
 public:
 	void pop(int index);
 	void add(int add);
