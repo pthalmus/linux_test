@@ -19,11 +19,11 @@ private:
 	std::vector<subRoom> room_Vector;
 	std::vector<int> room_num;
 public:
-	char show_Room_Detail(int room_Num);
+	char* show_Room_Detail(int room_Num);
 	void create_Sub_Room(char* msg);
 };
 
-char main_Room::show_Room_Detail(int room_Num)
+char* main_Room::show_Room_Detail(int room_Num)
 {
 	char details[100];
 	char pwd[10];
