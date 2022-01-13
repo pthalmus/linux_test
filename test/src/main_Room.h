@@ -1,9 +1,12 @@
 /*
- * main_Room.cpp
+ * main_Room.h
  *
- *  Created on: 2022. 1. 6.
+ *  Created on: 2022. 1. 13.
  *      Author: s9342931
  */
+
+#ifndef MAIN_ROOM_H_
+#define MAIN_ROOM_H_
 
 #include<iostream>
 #include<vector>
@@ -45,10 +48,17 @@ void main_Room::create_Sub_Room(char* msg)
 	if(count_Details == 3)
 	{
 		subRoom sb = subRoom(atoi(input_Item.at(0)),input_Item.at(1),atoi(input_Item.at(2)));
+		room_Vector.push_back(sb);
 	}
 	else if( count_Details == 4)
 	{
 		subRoom sb = subRoom(atoi(input_Item.at(0)),input_Item.at(1), input_Item.at(2),atoi(input_Item.at(3)));
+		room_Vector.push_back(sb);
 	}
-	room_Vector.push_back((const subRoom)sb);
+
 }
+
+
+
+
+#endif /* MAIN_ROOM_H_ */

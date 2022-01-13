@@ -10,6 +10,7 @@
 
 #include<vector>
 #include<algorithm>
+#include<random>
 
 class Player {
 private:
@@ -18,6 +19,7 @@ private:
 	char* player_Name;
 	int last_pop;
 	int win_Stack = 0;
+	int bot_Count = 0;
 	std::vector<int> hand;
 public:
 	void pop(int index);
@@ -32,7 +34,9 @@ public:
 	void up_Win_Stack();
 	void set_Room_Num(int num);
 	int get_Room_Num();
-
+	void set_Random_Hand();
+	int pop_Random(int num, int token);
+	void set_Bot_Start();
 };
 
 void Player::pop(int index)
@@ -97,24 +101,16 @@ int Player::get_Room_Num()
 	return room_Number;
 }
 
-class Player_Bot : public Player
-{
-private:
-	int last_pop;
-	int win_Stack = 0;
-	std::vector<int> hand;
-public:
-	void set_Random_Hand();
-	int pop_Random(int num, int token);
-};
 
-void Player_Bot::set_Random_Hand()
+void Player::set_Random_Hand()
 {
-	srand(time(NULL));
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int> dis(1, 15);
 
 	for (int i = 0; i < 6; i++)
 	{
-		hand.push_back(rand() % 15 + 1);
+		hand.push_back(dis(gen));
 		for (int j = 0; j < i; j++)
 		{
 			if (hand[i] == hand[j])
@@ -124,16 +120,22 @@ void Player_Bot::set_Random_Hand()
 			}
 		}
 	}
+	std::sort(hand.begin(), hand.end());
 }
-int Player_Bot::pop_Random(int num, int token)
+int Player::pop_Random(int num, int token)
 {
 	int item;
 	int count = 6;
 	int check = 0;
-	srand(time(NULL));
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int> dis(0, count-1);
+
+
 	while (1)
 	{
-		item = rand() % count + 1;
+		item = dis(gen);
 		if (token == 0 && hand.at(item) >= num) // token == 0 : above
 		{
 			pop(hand.at(item));
@@ -156,6 +158,11 @@ int Player_Bot::pop_Random(int num, int token)
 		}
 	}
 	return 0;
+}
+void Player::set_Bot_Start()
+{
+	this->set_Random_Hand();
+	bot_Count =1;
 }
 
 

@@ -7,17 +7,19 @@
 #include<netinet/in.h>
 #include<pthread.h>
 #include<time.h>
+
 #include<player.h>
+#include<main_Room.h>
 
 
-#define BUF_SIZE 100
-#define MAX_CLNT 100
+#define BUF_SIZE 1000
+#define MAX_CLNT 8
 #define MAX_IP 30
 #define MAX_ROOM 50
 #define LOBBY 0
 
 void * handle_clnt(void *arg);
-void send_msg(char *msg, int len, int room_Num);
+void send_msg(char *msg, int len, Player player);
 void error_handling(char *msg);
 
 
@@ -25,6 +27,9 @@ void error_handling(char *msg);
 int clnt_cnt[MAX_ROOM]=0;
 int clnt_socks[MAX_ROOM][MAX_CLNT];
 pthread_mutex_t mutx;
+
+main_Room Main_Room;
+std::vector<std::vector<int>> vector_2d(MAX_ROOM, std::vector<int> (MAX_CLNT, 0));
 
 int main(int argc, char *argv[])
 {
@@ -88,11 +93,116 @@ void *handle_clnt(void *arg)
     int str_len=0, i;
     char msg[BUF_SIZE];
 
+    char *ptr;
+    char *context;
     Player player = Player();
 
     while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
     {
-        send_msg(msg, str_len, player.get_Room_Num());
+    	switch(msg[0])
+		{
+		case 'c': // plane chat
+			msg = strtok_r(NULL, "&", &context);
+			send_msg(msg, str_len, player);
+			break;
+		case 'f': // associate with friends
+			break;
+		case 'r': // get room details
+			break;
+		case 'm': // make room
+			Main_Room.create_Sub_Room(msg);
+			pthread_mutex_lock(&mutx);
+			for (i=0; i<clnt_cnt; i++)
+			{
+				if (clnt_sock==clnt_socks[player.get_Room_Num][i])
+				{
+					while(i<clnt_cnt[player.get_Room_Num]-1)
+					{
+						clnt_socks[player.get_Room_Num][i]=clnt_socks[player.get_Room_Num][i+1];
+						i++;
+					}
+					break;
+				}
+			}
+			clnt_cnt[player.get_Room_Num]--;
+			pthread_mutex_unlock(&mutx);
+			ptr = strtok_r(msg, "&", &context);
+			ptr = strtok_r(NULL, "&", &context);
+			player.set_Room_Num(atoi(ptr));
+			clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
+			char enter_Msg[100];
+			sprintf(enter_Msg, "%s enter room %d", player.get_Player_Name(), player.get_Room_Num());
+			send_msg(enter_Msg, sizeof(enter_Msg), player);
+			break;
+
+		case 'e': // enter room
+			pthread_mutex_lock(&mutx);
+			for (i=0; i<clnt_cnt; i++)
+			{
+				if (clnt_sock==clnt_socks[player.get_Room_Num][i])
+				{
+					while(i<clnt_cnt[player.get_Room_Num]-1)
+					{
+						clnt_socks[player.get_Room_Num][i]=clnt_socks[player.get_Room_Num][i+1];
+						i++;
+					}
+					break;
+				}
+			}
+			clnt_cnt[player.get_Room_Num]--;
+			pthread_mutex_unlock(&mutx);
+			ptr = strtok_r(msg, "&", &context);
+			ptr = strtok_r(NULL, "&", &context);
+			player.set_Room_Num(atoi(ptr));
+			clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
+			char enter_Msg[100];
+			sprintf(enter_Msg, "%s enter room %d", player.get_Player_Name(), player.get_Room_Num());
+			send_msg(enter_Msg, sizeof(enter_Msg), player);
+			break;
+
+		case 'o': // out room
+			char enter_Msg[100];
+			sprintf(enter_Msg, "%s out room %d", player.get_Player_Name(), player.get_Room_Num());
+			send_msg(enter_Msg, sizeof(enter_Msg), player);
+
+			pthread_mutex_lock(&mutx);
+			for (i=0; i<clnt_cnt; i++)
+			{
+				if (clnt_sock==clnt_socks[player.get_Room_Num][i])
+				{
+					while(i<clnt_cnt[player.get_Room_Num]-1)
+					{
+						clnt_socks[player.get_Room_Num][i]=clnt_socks[player.get_Room_Num][i+1];
+						i++;
+					}
+					break;
+				}
+			}
+			clnt_cnt[player.get_Room_Num]--;
+			pthread_mutex_unlock(&mutx);
+
+			player.set_Room_Num(LOBBY);
+			pthread_mutex_lock(&mutx);
+			clnt_socks[LOBBY][clnt_cnt[LOBBY]++]=clnt_sock;
+			pthread_mutex_unlock(&mutx);
+			break;
+
+		case 'v': // invite friends
+			break;
+		case 'b': // block room capacity
+
+			break;
+		case 't': // add BOT player
+			break;
+		case 's': // game start
+			break;
+		case 'h': // submit hand
+			break;
+		case 'p': // pop out card
+			break;
+		default: // error code
+			break;
+		}
     }
 
     pthread_mutex_lock(&mutx);
@@ -108,20 +218,27 @@ void *handle_clnt(void *arg)
     		break;
     	}
     }
-    clnt_cnt--;
+    clnt_cnt[player.get_Room_Num]--;
     pthread_mutex_unlock(&mutx);
     close(clnt_sock);
     return NULL;
 }
 
-void send_msg(char* msg, int len, int room_Num)
+void send_msg(char* msg, int len, Player player)
 {
-    int i;
-    pthread_mutex_lock(&mutx);
-    for (i=0; i<clnt_cnt; i++)
-        write(clnt_socks[room_Num][i], msg, len);
-    pthread_mutex_unlock(&mutx);
+
+	int i;
+
+	pthread_mutex_lock(&mutx);
+	for (i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+	{
+		write(clnt_socks[player.get_Room_Num()][i], msg, len);
+	}
+	pthread_mutex_unlock(&mutx);
+
 }
+
+void
 
 void error_handling(char *msg)
 {

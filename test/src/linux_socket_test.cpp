@@ -39,6 +39,8 @@ char draw_Msg[] = "draw";
 
 Player player[MAX_CLNT];
 
+
+
 int main(int argc, char* argv[]) {
 	int serv_sock;
 	int clnt_sock;
@@ -116,7 +118,7 @@ void *handle_clnt(void *arg)
     {
     	if(msg[0] == 'c') //plane text
     	{
-    		msg = strtok_s(NULL, "&", &context);
+    		msg = strtok_r(NULL, "&", &context);
     		send_msg(msg, sizeof(msg));
     	}
     	else if(msg[0] == 's') // host start
@@ -126,14 +128,14 @@ void *handle_clnt(void *arg)
     	else if(msg[0] == 'i') // player send hand
 		{
     		int check;
-    		ptr = strtok_s(msg, "&", &context);
-    		ptr = strtok_s(NULL, "&", &context);
+    		ptr = strtok_r(msg, "&", &context);
+    		ptr = strtok_r(NULL, "&", &context);
     		check = atoi(ptr);
-    		ptr = strtok_s(NULL, "&", &context);
+    		ptr = strtok_r(NULL, "&", &context);
     		while(ptr != NULL)
     		{
     			player[check].add(atoi(ptr));
-    			ptr = strtok_s(NULL, "&", &context);
+    			ptr = strtok_r(NULL, "&", &context);
     		}
 		}
     	else if(msg[0] == 'p') // player send card
@@ -141,10 +143,10 @@ void *handle_clnt(void *arg)
     		int check=0;
     		int win=0;
     		pthread_mutex_lock(&mutx);
-    		ptr = strtok_s(msg, "&", &context);
-    		ptr = strtok_s(NULL, "&", &context);
+    		ptr = strtok_r(msg, "&", &context);
+    		ptr = strtok_r(NULL, "&", &context);
     		check = atoi(ptr);
-    		ptr = strtok_s(NULL, "&", &context);
+    		ptr = strtok_r(NULL, "&", &context);
     		player[check].pop(atoi(ptr));
     		pop_Item.push_back(atoi(ptr));
     		pop_Count++;
