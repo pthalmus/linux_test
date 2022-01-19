@@ -14,15 +14,26 @@
 
 class Player {
 private:
-	int player_num;
+	int player_num = 0;
 	int room_Number = 0;
 	char* player_Name;
-	int last_pop;
+	int last_pop = 0;
 	int win_Stack = 0;
 	int bot_Count = 0;
 	std::vector<int> hand;
 	bool loosing = false;
 public:
+	Player()
+	{
+		char temp_name[] = "temp_name";
+		player_Name = temp_name;
+	}
+	Player(const Player& origin)
+	{
+		player_num = origin.player_num;
+		room_Number = origin.room_Number;
+		player_Name = origin.player_Name;
+	}
 	void pop(int index);
 	void add(int add);
 	std::vector<int> get_Hand();
@@ -131,7 +142,7 @@ int Player::pop_Random(int num, int token)
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<int> dis(0, count-1);
+	std::uniform_int_distribution<int> dis(0, count - 1);
 
 
 	while (1)
@@ -163,8 +174,7 @@ int Player::pop_Random(int num, int token)
 void Player::set_Bot_Start()
 {
 	this->set_Random_Hand();
-	bot_Count =1;
+	bot_Count = 1;
 }
-
 
 #endif /* PLAYER_H_ */
