@@ -14,14 +14,14 @@
 #include<string.h>
 #include"sub_Room.h"
 
-#define MAX_ROOM 40
+#define max_room 40
 
 class main_Room {
 private:
-	subRoom sbroom[MAX_ROOM];
+	subRoom sbroom[max_room];
 public:
 	main_Room(){};
-	char* show_Room_Detail(int room_Num);
+	void show_Room_Detail(int room_Num, char* detail);
 	void create_Sub_Room(char* msg);
 	void minus_Room_Max_Player(int room_Num);
 	void enter_Room(int room_Num, Player player, char* msg);
@@ -29,13 +29,12 @@ public:
 	void set_pop(Player player);
 };
 
-char* main_Room::show_Room_Detail(int room_Num)
+void main_Room::show_Room_Detail(int room_Num, char* detail)
 {
-	char details[100];
 	char pwd;
 	int room_Max_People;
 	char* room_Name;
-	for (int i = 1; i < MAX_ROOM; i++)
+	for (int i = 1; i < max_room; i++)
 	{
 		if (sbroom[i].get_Room_Number() == room_Num)
 		{
@@ -49,11 +48,10 @@ char* main_Room::show_Room_Detail(int room_Num)
 			}
 			room_Max_People = sbroom[i].get_Max_Player();
 			room_Name = sbroom[i].get_Room_Name();
-			sprintf(details, "g&%d&%s&%c&%d", room_Num, room_Name, pwd, room_Max_People);
+			sprintf(detail, "g&%d&%s&%c&%d", room_Num, room_Name, pwd, room_Max_People);
 			break;
 		}
 	}
-	return details;
 }
 void main_Room::create_Sub_Room(char* msg)
 {
@@ -64,20 +62,21 @@ void main_Room::create_Sub_Room(char* msg)
 	int count = 0;
 
 
-	for (int i = 1; i < MAX_ROOM; i++)
+	for (int i = 1; i < max_room; i++)
 	{
 		if (sbroom[i].get_Room_Number() == 0)
 		{
 			count = i;
+			break;
 		}
 	}
 
-	ptr = strtok_r(msg, "&", &context);
-	ptr = strtok_r(NULL, "&", &context);
+	ptr = strtok(msg, "&");
+	ptr = strtok(NULL, "&");
 	while (ptr != NULL)
 	{
 		input_Item.push_back(ptr);
-		ptr = strtok_r(NULL, "&", &context);
+		ptr = strtok(NULL, "&");
 	}
 	count_Details = input_Item.size();
 	if (count_Details == 3)
@@ -93,7 +92,7 @@ void main_Room::create_Sub_Room(char* msg)
 }
 void main_Room::minus_Room_Max_Player(int room_Num)
 {
-	for(int i=0; i<MAX_ROOM; i++)
+	for(int i=0; i<max_room; i++)
 	{
 		if(sbroom[i].get_Room_Number() == room_Num)
 		{

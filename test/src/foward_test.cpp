@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #include<pthread.h>
 
-#define BUFSIZE 1024
+#define BUFSIZE 256
 #define MAX_CLNT 20
 
 void error_handling(char *message);
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	printf("starting server : %s <port>\n", argv[1]);
+	printf("starting server : in %s port\n", argv[1]);
 	serv_sock = socket(PF_INET, SOCK_STREAM, 0);    /* 서버 소켓 생성 */
 
 	if(serv_sock == -1)
@@ -80,6 +80,8 @@ int main(int argc, char **argv)
 
 	while(1)
 	{
+		pthread_mutex_lock(&mutx);
+
 		clnt_addr_size = sizeof(clnt_addr);
 		clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
 		if(clnt_sock == -1)
@@ -87,7 +89,6 @@ int main(int argc, char **argv)
 			error_handling(error_accept);
 		}
 
-		pthread_mutex_lock(&mutx);
 		clnt_socks[clnt_cnt++]=clnt_sock;
 		pthread_mutex_unlock(&mutx);
 
@@ -105,12 +106,12 @@ void *handle_clnt(void *arg)
     int clnt_sock=*((int*)arg);
     int str_len=0, i;
     char msg[BUFSIZE];
-    char asdf;
-
+    memset(&msg, 0, sizeof(msg));
 
     while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
     {
 		send_msg(msg, str_len);
+		memset(&msg, 0, str_len);
     }
 
     pthread_mutex_lock(&mutx);
@@ -140,6 +141,7 @@ void send_msg(char* msg, int len)
 	{
 		write(clnt_socks[i], msg, len);
 	}
+
 	pthread_mutex_unlock(&mutx);
 }
 

@@ -16,19 +16,19 @@ int calculrating(std::vector<int> pop_num)
 	int temp=0;
 	int check=0;
 	sort(pop_num.rbegin(), pop_num.rend());
-	for(std::vector<int>::iterator iter = pop_num.begin(); iter!=pop_num.end(); iter++)
+	for(int i =0; i < pop_num.size(); i++)
 	{
-		if(iter > temp)
+		if(pop_num.at(i) > temp)
 		{
-			temp = *iter;
+			temp = pop_num.at(i);
 		}
-		else if(iter == temp)
+		else if(pop_num.at(i) == temp)
 		{
 			check = 1;
 		}
-		else if(temp > iter && check == 1)
+		else if(temp > pop_num.at(i) && check == 1)
 		{
-			temp = *iter;
+			temp = pop_num.at(i);
 			check = 0;
 		}
 	}

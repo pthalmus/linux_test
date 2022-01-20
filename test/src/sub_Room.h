@@ -21,6 +21,7 @@ private:
 	int room_Number = 0;
 	char* room_Pwd = NULL;
 	char* room_Name = NULL;
+	int cur_Player = 0;
 	int max_Player = 8;
 	Player room_Player[8];
 	int order = 0;
@@ -70,32 +71,27 @@ public:
 
 bool subRoom::add_Player(Player add_player, char* msg)
 {
-	if (this->room_Pwd == NULL)
+	if (this->room_Pwd == NULL && cur_Player < max_Player)
 	{
-		if (sizeof(room_Player) < max_Player)
+		for (int i = 0; i < max_Player; i++)
 		{
-			for (int i = 0; i < max_Player; i++)
+			if (room_Player[i].get_Player_Name() == NULL)
 			{
-				if (room_Player[i].get_Player_Name() == NULL)
-				{
-					room_Player[i] = add_player;
-				}
+				room_Player[i] = add_player;
+				cur_Player++;
+				break;
 			}
 		}
 	}
-	else
+	else if(this->room_Pwd !=NULL && strcmp(room_Pwd,msg) == 0 && cur_Player < max_Player)
 	{
-		if (this->room_Pwd !=NULL && strcmp(room_Pwd,msg) == 0)
+		for (int i = 0; i < max_Player; i++)
 		{
-			if (sizeof(room_Player) < max_Player)
+			if (room_Player[i].get_Player_Name() == NULL)
 			{
-				for (int i = 0; i < max_Player; i++)
-				{
-					if (room_Player[i].get_Player_Name() == NULL)
-					{
-						room_Player[i] = add_player;
-					}
-				}
+				room_Player[i] = add_player;
+				cur_Player++;
+				break;
 			}
 		}
 	}
@@ -113,6 +109,7 @@ void subRoom::pop_Player(Player pop_player)
 				room_Player[i] = room_Player[i + 1];
 				i++;
 			}
+			cur_Player--;
 			break;
 		}
 	}
