@@ -7,12 +7,15 @@
 #include<pthread.h>
 #include<time.h>
 #include<mysql/mysql.h>
+#include<jsoncpp/json/json.h>
+
 
 
 #include"player.h"
 #include"main_Room.h"
 #include"mysql_Injection.h"
 
+#define JSON_IS_AMALGAMATION
 
 #define BUF_SIZE 128
 #define MAX_CLNT 8
@@ -20,11 +23,12 @@
 #define MAX_ROOM 40
 #define LOBBY 0
 
-void * handle_clnt(void *arg);
-void send_msg(char *msg, int len, Player player);
 void error_handling(char *msg);
-void send_detail(char* room_detail, int len, int clnt_sock);
+void * handle_clnt(void *arg);
 void error_Mysql(char *msg);
+void send_msg(char *msg, int len, Player player);
+void send_Json(Json::Value root, Player player);
+void send_Json(Json::Value root, int clnt_sock);
 void send_reg(char* msg, int len, int clnt_sock);
 
 
@@ -47,11 +51,6 @@ char game_start[] = "game start!!";
 char unknown_Error[] = "Unknown Error Code!!";
 char error_room[] ="cannot access to room";
 char reg_succes[] = "true";
-
-char div1[] ="100&"; // MSG.what about register
-char div2[] ="200&"; // MSG.what about chat
-char div3[] ="300&"; // MSG.what about In-game
-char div4[] ="400&"; // MSG.what about room Detail
 
 int main(int argc, char *argv[])
 {
@@ -156,45 +155,26 @@ void *handle_clnt(void *arg)
     int clnt_sock=*((int*)arg);
     int str_len=0;
     char msg[BUF_SIZE];
-    char msg_out[BUF_SIZE];
-
     memset(&msg, 0, sizeof(msg));
 
     char *ptr;
     Player player = Player();
     int count =0;
 
+    std::string input_msg;
+    Json::Value string_Value;
+    Json::Reader string_Reader;
+
+    std::string temp = "400";
 
     while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
     {
-    	switch(msg[0])
-		{
-		case'c': // plane chat format "c&'player name : plane text'"
-			ptr = strtok(msg, "&");
-			strcat(msg_out,div2);
-			strcat(msg_out,player.get_Player_Name());
-			strcat(msg_out,ptr);
-			send_msg(msg_out, sizeof(msg_out), player);
-			break;
-		case'r': // get room details format "r"
-			char room_detail[50];
-			memset(&room_detail, 0, sizeof(room_detail));
-			ptr = strtok(msg, "&");
-			strcat(msg_out,div4);
-			for(int i=0; i<MAX_ROOM; i++)
-			{
-				if(Main_Room.check_Room(i))
-				{
-					Main_Room.show_Room_Detail(i, room_detail);
-					send_detail(room_detail, sizeof(room_detail), clnt_sock);
-					memset(&room_detail, 0, sizeof(room_detail));
-				}
-			}
-			break;
-		case'm': // make room format m&room_Num&room_Name&max_Player&room_password(있다면)
-			char make_Msg[40];
-			ptr = strtok(msg, "&");
-			Main_Room.create_Sub_Room(ptr);
+    	input_msg = msg;
+    	string_Reader.parse(input_msg,string_Value);
+
+    	if(temp.compare(string_Value["what"].asString()) ==0)
+    	{
+    		Json::Value make;
 			pthread_mutex_lock(&mutx);
 			for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
 			{
@@ -210,12 +190,36 @@ void *handle_clnt(void *arg)
 			}
 			clnt_cnt[player.get_Room_Num()]--;
 			pthread_mutex_unlock(&mutx);
-			ptr = strtok(msg, "&");
-			ptr = strtok(NULL, "&");
-			player.set_Room_Num(atoi(ptr));
+			Main_Room.create_Sub_Room(string_Value,make);
+			player.set_Room_Num(atoi(string_Value["roomNum"].asCString()));
+
 			clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
-			sprintf(make_Msg, "%s make room %d", player.get_Player_Name(), player.get_Room_Num());
-			send_msg(make_Msg, sizeof(make_Msg), player);
+			make["what"] = "400";
+			send_Json(make, clnt_sock);
+    	}
+    	else
+    	{
+    		send_msg(unknown_Error,sizeof(unknown_Error), player);
+    	}
+    	/*
+    	switch(string_Value["what"].asString())
+		{
+		case'200': // plane chat format "c&'player name : plane text'"
+			Json::Value chat;
+			ptr = strtok(msg, "&");
+			chat["what"] = "200";
+			chat["who"]=player.get_Player_Name();
+			chat["chat"] = ptr;
+			send_Json(chat, player);
+			break;
+		case'403': // get room details format "r"
+			Json::Value room;
+			room["what"] = "403";
+			Main_Room.show_Room_Detail(room);
+			send_Json(room,clnt_sock);
+			break;
+		case'400': // make room format m&room_Num&room_Name&max_Player&room_pwd(있다면)
+
 			break;
 
 		case'e': // enter room format e&room_Num
@@ -307,8 +311,6 @@ void *handle_clnt(void *arg)
 			break;
 		case 't': // add BOT player
 			break;
- *
- */
 
 		case '*': // player sign up format *&'player_Name'&'player_UID'
 			ptr = strtok(msg, "&");
@@ -319,11 +321,8 @@ void *handle_clnt(void *arg)
 				send_reg(reg_succes,sizeof(reg_succes),clnt_sock);
 			}
 			break;
-
-		default: // error code
-			send_msg(unknown_Error,sizeof(unknown_Error), player);
-			break;
-		}
+			 *
+ */
     	memset(&msg, 0, sizeof(msg));
     }
 
@@ -357,18 +356,43 @@ void send_msg(char* msg, int len, Player player)
 	pthread_mutex_unlock(&mutx);
 
 }
-void send_detail(char* room_detail, int len, int clnt_sock)
+void send_Json(Json::Value root, Player player)
 {
+	std::string jsonadpter;
+	Json::StyledWriter writer;
+	jsonadpter = writer.write(root);
+
+	char* msg = (char*)malloc(sizeof(jsonadpter)+10);
+	strcpy(msg,root["what"].asCString());
+	strcpy(msg,jsonadpter.c_str());
+	pthread_mutex_lock(&mutx);
+	for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+	{
+		write(clnt_socks[player.get_Room_Num()][i], msg, sizeof(msg));
+	}
+	pthread_mutex_unlock(&mutx);
+	free(msg);
+}
+void send_Json(Json::Value root, int clnt_sock)
+{
+	std::string jsonadpter;
+	Json::StyledWriter writer;
+	jsonadpter = writer.write(root);
+
+	char* msg = (char*)malloc(sizeof(jsonadpter)+10);
+	strcpy(msg,root["what"].asCString());
+	strcpy(msg,jsonadpter.c_str());
 	pthread_mutex_lock(&mutx);
 	for (int i=0; i<clnt_cnt[LOBBY]; i++)
 	{
 		if(clnt_socks[LOBBY][i] == clnt_sock)
 		{
-			write(clnt_socks[LOBBY][i], room_detail, len);
+			write(clnt_socks[LOBBY][i], msg, sizeof(msg));
 			break;
 		}
 	}
 	pthread_mutex_unlock(&mutx);
+	free(msg);
 }
 void send_reg(char* msg, int len, int clnt_sock)
 {

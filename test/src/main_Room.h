@@ -21,9 +21,15 @@ class main_Room {
 private:
 	subRoom sbroom[max_room];
 public:
-	main_Room(){};
-	void show_Room_Detail(int room_Num, char* detail);
-	void create_Sub_Room(char* msg);
+	main_Room()
+	{
+		for(int i=0; i<max_room; i++)
+		{
+			sbroom[i] = subRoom();
+		}
+	};
+	void show_Room_Detail(Json::Value root);
+	bool create_Sub_Room(Json::Value root, Json::Value outPut);
 	void minus_Room_Max_Player(int room_Num);
 	void enter_Room(int room_Num, Player player, char* msg);
 	void out_Room(int room_Num, Player player);
@@ -34,16 +40,14 @@ public:
 	bool check_Status(int room_Num);
 };
 
-void main_Room::show_Room_Detail(int room_Num, char* detail)
+void main_Room::show_Room_Detail(Json::Value root)
 {
-	char* room_Name;
 	char pwd;
-	int room_Cur_People;
-	int room_Max_People;
-	char jsonStart[] = ""
+	Json::Value roomDetail;
+
 	for (int i = 1; i < max_room; i++)
 	{
-		if (sbroom[i].get_Room_Number() == room_Num && sbroom[i].get_Room_Status() == 0)
+		if (sbroom[i].get_Room_Number() != 0 && sbroom[i].get_Room_Status() == 0)
 		{
 			if (sbroom[i].get_Room_PWD() == 0)
 			{
@@ -53,23 +57,19 @@ void main_Room::show_Room_Detail(int room_Num, char* detail)
 			{
 				pwd = 'N';
 			}
-			room_Cur_People = sbroom[i].get_Cur_Player();
-			room_Max_People = sbroom[i].get_Max_Player();
-			room_Name = sbroom[i].get_Room_Name();
-			sprintf(detail, "g&%d&%s&%c&%d&%d", room_Num, room_Name, pwd,room_Cur_People, room_Max_People);
-			break;
+			roomDetail["roomNum"]=i;
+			roomDetail["roomName"]=sbroom[i].get_Room_Name();
+			roomDetail["roomPW"]= pwd;
+			roomDetail["curPlayer"]=sbroom[i].get_Cur_Player();
+			roomDetail["Max_Player"]=sbroom[i].get_Max_Player();
+			roomDetail["status"]=sbroom[i].get_Room_Status();
+			root["roomDetail"] = roomDetail;
 		}
 	}
 }
-void main_Room::create_Sub_Room(char* msg)
+bool main_Room::create_Sub_Room(Json::Value root, Json::Value outPut)
 {
-	char* ptr;
-	char* context = NULL;
-	std::vector<char*> input_Item;
-	int count_Details = 0;
-	int count = 0;
-
-
+	int count;
 	for (int i = 1; i < max_room; i++)
 	{
 		if (sbroom[i].get_Room_Number() == 0)
@@ -78,25 +78,22 @@ void main_Room::create_Sub_Room(char* msg)
 			break;
 		}
 	}
-
-	ptr = strtok(msg, "&");
-	ptr = strtok(NULL, "&");
-	while (ptr != NULL)
+	if (root["roomPW"] == "")
 	{
-		input_Item.push_back(ptr);
-		ptr = strtok(NULL, "&");
+		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asCString()));
+		printf("%d번방 %s이(가) 생성되었습니다\n", count, (char*)root["roomName"].asCString());
+		outPut["status"] ="1";
+		return true;
 	}
-	count_Details = input_Item.size();
-	if (count_Details == 3)
+	else
 	{
-		sbroom[count] = subRoom(atoi(input_Item.at(0)), input_Item.at(1), atoi(input_Item.at(2)));
-		printf("%d번방 %s이(가) 생성되었습니다\n", atoi(input_Item.at(0)), input_Item.at(1));
+		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asCString()),(char*)root["roomName"].asCString());
+		printf("비밀번호가 있는 %d번방 %s이(가) 생성되었습니다\n", count, (char*)root["roomName"].asCString());
+		outPut["status"] ="1";
+		return true;
 	}
-	else if (count_Details == 4)
-	{
-		sbroom[count] = subRoom(atoi(input_Item.at(0)), input_Item.at(1), atoi(input_Item.at(2)), input_Item.at(3));
-		printf("비밀번호가 있는 %d번방 %s이(가) 생성되었습니다\n", atoi(input_Item.at(0)), input_Item.at(1));
-	}
+	outPut["status"] ="0";
+	return false;
 }
 void main_Room::minus_Room_Max_Player(int room_Num)
 {
