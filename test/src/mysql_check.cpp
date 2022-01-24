@@ -22,27 +22,34 @@ public:
 int main()
 {
 	MYSQL *mysql;
-	MYSQL *mysqlconnection = NULL;
+	MYSQL *MYSQL_Connection = NULL;
 
 	std::string hostName = "127.0.0.1";
 	std::string userId = "root";
 	std::string password = "kiiamm12";
 	std::string DB = "GAMEDB";
 
-	mysqlconnection = mysql_init(NULL);
+	int mysql_status = 0;
+	MYSQL_RES *mysql_res = NULL;
 
-	mysql = mysql_real_connect(mysqlconnection,hostName.c_str(),userId.c_str(),password.c_str(),DB.c_str(),0,NULL,0);
+	MYSQL_ROW mysqlRow;
+	MYSQL_FIELD *mysqlFields;
+	my_ulonglong numRows;
+	unsigned int numFields;
+
+	MYSQL_Connection = mysql_init(NULL);
+
+	mysql = mysql_real_connect(MYSQL_Connection,hostName.c_str(),userId.c_str(),password.c_str(),DB.c_str(),0,NULL,0);
 
 	if(mysql == NULL)
 	{
-		throw FFError( (char*)mysql_error(mysqlconnection));
+		throw FFError( (char*)mysql_error(MYSQL_Connection));
 	}
-	printf("MYSQL Connection info %s\n",mysql_get_host_info(mysqlconnection));
+	printf("MYSQL Connection info %s\n",mysql_get_host_info(MYSQL_Connection));
 	printf("MYSQL Client info %s\n",mysql_get_client_info());
-	printf("MYSQL Server info %s\n",mysql_get_server_info(mysqlconnection));
+	printf("MYSQL Server info %s\n",mysql_get_server_info(MYSQL_Connection));
 
-	int mysql_status = 0;
-	MYSQL_RES *mysql_res = NULL;
+
 
 	if(mysql_res)
 	{
@@ -50,28 +57,25 @@ int main()
 		mysql_res = NULL;
 	}
 
-	MYSQL_ROW mysqlRow;
-	MYSQL_FIELD *mysqlFields;
-	my_ulonglong numRows;
-	unsigned int numFields;
+
 
 	try
 	{
 		std::string sqlSelStatement = "SHOW TABLES";
-		mysql_status = mysql_query(mysqlconnection, sqlSelStatement.c_str());
+		mysql_status = mysql_query(MYSQL_Connection, sqlSelStatement.c_str());
 
 		if(mysql_status)
 		{
-			throw FFError( (char*)mysql_error(mysqlconnection));
+			throw FFError( (char*)mysql_error(MYSQL_Connection));
 		}
 		else
 		{
-			mysql_res = mysql_store_result(mysqlconnection);
+			mysql_res = mysql_store_result(MYSQL_Connection);
 		}
 		if(mysql_res)
 		{
 			numRows = mysql_num_rows(mysql_res);
-			numFields = mysql_field_count(mysqlconnection);
+			numFields = mysql_field_count(MYSQL_Connection);
 			numFields = mysql_num_fields(mysql_res);
 
 			printf("Number of rows = %ld , Number of fields = %d \n", numRows, numFields);
@@ -105,10 +109,10 @@ int main()
 	catch(FFError e)
 	{
 		printf("%s\n", e.Label.c_str());
-		mysql_close(mysqlconnection);
+		mysql_close(MYSQL_Connection);
 		return 1;
 	}
-	mysql_close(mysqlconnection);
+	mysql_close(MYSQL_Connection);
 
 	return 0;
 }

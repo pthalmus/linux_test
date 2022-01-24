@@ -28,6 +28,7 @@ private:
 	int token = 0;
 	std::vector<int> pop_Inventory;
 	int count =0;
+	int room_Status =0;
 public:
 	subRoom() {};
 	subRoom(int num, char* name, int pMNum)
@@ -54,6 +55,7 @@ public:
 			room_Player[i] = origin_Room.room_Player[i];
 		}
 	}
+	~subRoom() {};
 	bool add_Player(Player add_Player, char* msg);
 	void pop_Player(Player pop_Player);
 	void block_Player();
@@ -67,6 +69,9 @@ public:
 	int get_Order();
 	int get_Token();
 	void push_Pop(int num);
+	int get_Cur_Player();
+	void set_Room_Status(int status);
+	int get_Room_Status();
 };
 
 bool subRoom::add_Player(Player add_player, char* msg)
@@ -186,9 +191,21 @@ void subRoom::push_Pop(int num)
 	{
 		winner = calculrating(pop_Inventory);
 		std::vector<int>().swap(pop_Inventory);
+		count =0;
 	}
 }
-
+int subRoom::get_Cur_Player()
+{
+	return cur_Player;
+}
+void subRoom::set_Room_Status(int status)
+{
+	this->room_Status = status;
+}
+int subRoom::get_Room_Status()
+{
+	return room_Status;
+}
 
 
 

@@ -16,6 +16,7 @@
 
 #define max_room 40
 
+
 class main_Room {
 private:
 	subRoom sbroom[max_room];
@@ -27,16 +28,22 @@ public:
 	void enter_Room(int room_Num, Player player, char* msg);
 	void out_Room(int room_Num, Player player);
 	void set_pop(Player player);
+	bool check_Room(int room_Num);
+	void game_Start(int room_Num);
+	void game_End(int room_Num);
+	bool check_Status(int room_Num);
 };
 
 void main_Room::show_Room_Detail(int room_Num, char* detail)
 {
-	char pwd;
-	int room_Max_People;
 	char* room_Name;
+	char pwd;
+	int room_Cur_People;
+	int room_Max_People;
+	char jsonStart[] = ""
 	for (int i = 1; i < max_room; i++)
 	{
-		if (sbroom[i].get_Room_Number() == room_Num)
+		if (sbroom[i].get_Room_Number() == room_Num && sbroom[i].get_Room_Status() == 0)
 		{
 			if (sbroom[i].get_Room_PWD() == 0)
 			{
@@ -46,9 +53,10 @@ void main_Room::show_Room_Detail(int room_Num, char* detail)
 			{
 				pwd = 'N';
 			}
+			room_Cur_People = sbroom[i].get_Cur_Player();
 			room_Max_People = sbroom[i].get_Max_Player();
 			room_Name = sbroom[i].get_Room_Name();
-			sprintf(detail, "g&%d&%s&%c&%d", room_Num, room_Name, pwd, room_Max_People);
+			sprintf(detail, "g&%d&%s&%c&%d&%d", room_Num, room_Name, pwd,room_Cur_People, room_Max_People);
 			break;
 		}
 	}
@@ -107,12 +115,38 @@ void main_Room::enter_Room(int room_Num, Player player, char* msg)
 void main_Room::out_Room(int room_Num, Player player)
 {
 	sbroom[room_Num].pop_Player(player);
+	if(sbroom[room_Num].get_Cur_Player() ==0 )
+	{
+	}
 }
 void main_Room::set_pop(Player player)
 {
 	sbroom[player.get_Room_Num()].push_Pop(player.get_Last_Pop());
 }
-
+bool main_Room::check_Room(int room_Num)
+{
+	if( sbroom[room_Num].get_Room_Number() != 0)
+	{
+		return true;
+	}
+	return false;
+}
+void main_Room::game_Start(int room_Num)
+{
+	sbroom[room_Num].set_Room_Status(1);
+}
+void main_Room::game_End(int room_Num)
+{
+	sbroom[room_Num].set_Room_Status(0);
+}
+bool main_Room::check_Status(int room_Num)
+{
+	if(sbroom[room_Num].get_Room_Status() == 0)
+	{
+		return true;
+	}
+	return false;
+}
 
 
 #endif /* MAIN_ROOM_H_ */
