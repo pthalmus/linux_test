@@ -496,7 +496,6 @@ void *handle_room(void *arg)
 		}
 		send_Detail(room);
 		std::cout<<"send room detail\n";
-
 		sleep(5000);
 	}
 }
