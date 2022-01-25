@@ -375,8 +375,11 @@ void *handle_clnt(void *arg)
 					clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
 					Main_Room.enter_Room(player.get_Room_Num(), player, ptr);
 
-					in["who"] = player.get_Player_Name();
-					in["where"] = player.get_Room_Num();
+					in["roomName"];
+					in["roomPW"];
+					in["curPlayer"];
+					in["player"];
+					in["roomNum"] = player.get_Room_Num();
 					in["status"] = 1;
 				}
 				else
