@@ -30,7 +30,7 @@ public:
 	};
 	Json::Value show_Room_Detail(int room_Num);
 	bool check_Room_Detail(int room_Num);
-	bool create_Sub_Room(Json::Value root);
+	int create_Sub_Room(Json::Value root);
 	bool minus_Room_Max_Player(int room_Num);
 	void enter_Room(int room_Num, Player player, char* msg);
 	void out_Room(int room_Num, Player player);
@@ -63,7 +63,7 @@ bool main_Room::check_Room_Detail(int room_Num)
 	}
 	return false;
 }
-bool main_Room::create_Sub_Room(Json::Value root)
+int main_Room::create_Sub_Room(Json::Value root)
 {
 	int count;
 	for (int i = 1; i < max_room; i++)
@@ -78,15 +78,15 @@ bool main_Room::create_Sub_Room(Json::Value root)
 	{
 		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asString().c_str()));
 		printf("%d번방 %s(이)가 생성되었습니다\n", count, (char*)root["roomName"].asCString());
-		return true;
+		return count;
 	}
 	else
 	{
 		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asString().c_str()),root["roomPW"].asString());
 		printf("비밀번호가 있는 %d번방 %s(이)가 생성되었습니다\n", count, (char*)root["roomName"].asCString());
-		return true;
+		return count;
 	}
-	return false;
+	return 0;
 }
 bool main_Room::minus_Room_Max_Player(int room_Num)
 {

@@ -16,26 +16,25 @@
 #define JSON_IS_AMALGAMATION
 
 #define BUF_SIZE 1024
-#define MAX_CLNT 8
 #define MAX_IP 30
 #define MAX_ROOM 40
 #define LOBBY 0
 
 void error_handling(char *msg);
 void * handle_clnt(void *arg);
+void *handle_room(void *arg);
 void error_Mysql(char *msg);
 void send_msg(char *msg, int len, Player player);
 void send_Json(Json::Value root, int clnt_sock , Player player);
 void send_Json(Json::Value root, Player player);
 void send_Json(Json::Value root, int clnt_sock);
-void send_FriendS(Json::Value root, int clnt_sock);
-void send_FriendA(Json::Value root, int clnt_sock);
+void send_Detail(Json::Value root);
 void send_reg(char* msg, int len, int clnt_sock);
 
 
 main_Room Main_Room = main_Room();
 int clnt_cnt[MAX_ROOM];
-int clnt_socks[MAX_ROOM][MAX_CLNT];
+int clnt_socks[MAX_ROOM][100];
 pthread_mutex_t mutx;
 
 
@@ -60,6 +59,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_adr, clnt_addr;
     socklen_t clnt_addr_sz;
     pthread_t t_id;
+    pthread_t r_id;
 
     struct tm *t;
     time_t timer = time(NULL);
@@ -131,6 +131,9 @@ int main(int argc, char *argv[])
     clnt_addr_sz= sizeof(clnt_addr);
     while(1)
     {
+    	pthread_create(&r_id, NULL, handle_room, (void*)&clnt_sock);
+    	pthread_detach(r_id);
+
         t=localtime(&timer);
         clnt_sock = accept(serv_sock, (struct sockaddr*) &clnt_addr, &clnt_addr_sz);
 		if(clnt_sock == -1)
@@ -143,6 +146,7 @@ int main(int argc, char *argv[])
         pthread_mutex_unlock(&mutx);
 
         pthread_create(&t_id, NULL, handle_clnt, (void*)&clnt_sock);
+
         pthread_detach(t_id);
         printf(" Connected client IP : %s ", inet_ntoa(clnt_addr.sin_addr));
         printf("(%d-%d-%d %d:%d)\n", t->tm_year+1900, t->tm_mon+1, t->tm_mday,
@@ -170,7 +174,6 @@ void *handle_clnt(void *arg)
     while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
     {
     	string_Reader.parse(msg,string_Value);
-    	std::cout<< msg << "\n";
     	switch(string_Value["what"].asInt())
     	{
 			case 100:
@@ -223,7 +226,7 @@ void *handle_clnt(void *arg)
 					excute["cash"] = atoi(row4);
 					excute["isUser"] = "1";
 				}
-				std::cout<<excute<<"\n";
+				player.set_Player_Name(row2);
 				send_Json(excute, clnt_sock);
 				break;
 			}
@@ -313,27 +316,28 @@ void *handle_clnt(void *arg)
 			{
 				Json::Value make;
 				make["what"] =400;
-				if(Main_Room.create_Sub_Room(string_Value))
+				int Num400;
+				if((Num400 = Main_Room.create_Sub_Room(string_Value)) != 0)
 				{
 					make["status"] ="1";
 					send_Json(make, clnt_sock);
-					clnt_cnt[player.get_Room_Num()]--;
 
 					pthread_mutex_lock(&mutx);
 
-					for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+					for (int i=0; i<clnt_cnt[LOBBY]; i++)
 					{
-						if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+						if (clnt_sock==clnt_socks[LOBBY][i])
 						{
-							while(i<clnt_cnt[player.get_Room_Num()]-1)
+							while(i<clnt_cnt[LOBBY]-1)
 							{
-								clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
+								clnt_socks[LOBBY][i]=clnt_socks[LOBBY][i+1];
 								i++;
 							}
+							clnt_cnt[LOBBY]--;
 							break;
 						}
 					}
-					player.set_Room_Num(atoi(string_Value["roomNum"].asString().c_str()));
+					player.set_Room_Num(Num400);
 					clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
 
 					pthread_mutex_unlock(&mutx);
@@ -352,19 +356,19 @@ void *handle_clnt(void *arg)
 				if(Main_Room.check_Status(atoi(string_Value["roomNum"].asString().c_str())))
 				{
 					pthread_mutex_lock(&mutx);
-					for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+					for (int i=0; i<clnt_cnt[LOBBY]; i++)
 					{
-						if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+						if (clnt_sock==clnt_socks[LOBBY][i])
 						{
-							while(i<clnt_cnt[player.get_Room_Num()]-1)
+							while(i<clnt_cnt[LOBBY]-1)
 							{
-								clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
+								clnt_socks[LOBBY][i]=clnt_socks[LOBBY][i+1];
 								i++;
 							}
+							clnt_cnt[LOBBY]--;
 							break;
 						}
 					}
-					clnt_cnt[player.get_Room_Num()]--;
 					pthread_mutex_unlock(&mutx);
 
 					player.set_Room_Num(string_Value["where"].asInt());
@@ -409,22 +413,6 @@ void *handle_clnt(void *arg)
 				player.set_Room_Num(LOBBY);
 				clnt_socks[LOBBY][clnt_cnt[LOBBY]++]=clnt_sock;
 				pthread_mutex_unlock(&mutx);
-				break;
-			}
-			case 403:
-			{
-				Json::Value room;
-				room["what"] = 403;
-				int count = atoi(string_Value["roomCnt"].asString().c_str());
-				for(int i=count; i<count+5; i++)
-				{
-					if(Main_Room.check_Room_Detail(i))
-					{
-						room["detail"].append(Main_Room.show_Room_Detail(i));
-					}
-				}
-
-				send_Json(room,clnt_sock);
 				break;
 			}
 				/*
@@ -493,6 +481,26 @@ void *handle_clnt(void *arg)
     return NULL;
 }
 
+void *handle_room(void *arg)
+{
+	Json::Value room;
+	room["what"] = 403;
+	while(1)
+	{
+		for(int i=1; i<40; i++)
+		{
+			if(Main_Room.check_Room_Detail(i))
+			{
+				room["detail"].append(Main_Room.show_Room_Detail(i));
+			}
+		}
+		send_Detail(room);
+		std::cout<<"send room detail\n";
+
+		sleep(5000);
+	}
+}
+
 void send_msg(char* msg, int len, Player player)
 {
 	printf("%s \n",msg);
@@ -511,10 +519,13 @@ void send_Json(Json::Value root, Player player)
 	Json::StyledWriter writer;
 	jsonadpter = writer.write(root);
 
+	std::cout<<"player room : " << player.get_Room_Num() <<"\n";
+
 	pthread_mutex_lock(&mutx);
 	for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
 	{
 		write(clnt_socks[player.get_Room_Num()][i], jsonadpter.c_str(), jsonadpter.size());
+		std::cout<<"clnt_socks: " << clnt_socks[player.get_Room_Num()][i] <<"\n";
 	}
 	pthread_mutex_unlock(&mutx);
 }
@@ -551,6 +562,20 @@ void send_Json(Json::Value root, int clnt_sock, Player player)
 			write(clnt_socks[player.get_Room_Num()][i], jsonadpter.c_str(), jsonadpter.size());
 			break;
 		}
+	}
+	pthread_mutex_unlock(&mutx);
+}
+void send_Detail(Json::Value root)
+{
+	std::string jsonadpter;
+	jsonadpter.reserve(root.size());
+	Json::StyledWriter writer;
+	jsonadpter = writer.write(root);
+
+	pthread_mutex_lock(&mutx);
+	for (int i=0; i<clnt_cnt[LOBBY]; i++)
+	{
+		write(clnt_socks[LOBBY][i], jsonadpter.c_str(), jsonadpter.size());
 	}
 	pthread_mutex_unlock(&mutx);
 }
