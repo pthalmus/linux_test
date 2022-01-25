@@ -63,7 +63,7 @@ bool reg_Player(MYSQL *mysql, std::string userName, std::string userID)
 	memset(&sqlStatement,0,sizeof(sqlStatement));
 
 	try{
-		sprintf(sqlStatement, "INSERT INTO user(user_Name,UID) VALUES('%s','%s');",userName.c_str(),userID.c_str());
+		sprintf(sqlStatement, "INSERT INTO user(userName,userID) VALUES('%s','%s');",userName.c_str(),userID.c_str());
 		mysql_status = mysql_query(mysql, sqlStatement);
 		if(mysql_status)
 		{
@@ -71,17 +71,8 @@ bool reg_Player(MYSQL *mysql, std::string userName, std::string userID)
 		}
 		else
 		{
-			mysql_res = mysql_store_result(mysql);
-		}
-		if(mysql_res)
-		{
 			return true;
 		}
-		else
-		{
-			printf("result set is empty!");
-		}
-
 	}
 	catch(SQLError e)
 	{
@@ -90,18 +81,50 @@ bool reg_Player(MYSQL *mysql, std::string userName, std::string userID)
 
 	return false;
 }
-/*
-MYSQL_RES selcet_Player(MYSQL *mysql, std::string userName)
+bool del_Player(MYSQL *mysql, std::string userID)
 {
 	char sqlStatement[MAX_LENGTH];
 	int mysql_status = 0;
 	MYSQL_RES *mysql_res = NULL;
-	MYSQL_RES *
 
 	memset(&sqlStatement,0,sizeof(sqlStatement));
 
 	try{
-		sprintf(sqlStatement, "select * from user where userName = %s;",userName);
+		sprintf(sqlStatement, "DELETE FROM user where userID = '%s';",userID.c_str());
+		mysql_status = mysql_query(mysql, sqlStatement);
+		if(mysql_status)
+		{
+			throw SQLError( (char*)mysql_error(mysql));
+		}
+		else
+		{
+			return true;
+		}
+	}
+	catch(SQLError e)
+	{
+		printf("%s\n", e.Label.c_str());
+	}
+
+	return false;
+}
+MYSQL_RES* selcet_Player(MYSQL *mysql, std::string userID)
+{
+	char sqlStatement[MAX_LENGTH];
+	int mysql_status = 0;
+	MYSQL_RES *mysql_res = NULL;
+	MYSQL_ROW mysqlRow;
+
+	if(mysql_res)
+	{
+		mysql_free_result(mysql_res);
+		mysql_res = NULL;
+	}
+
+	memset(&sqlStatement,0,sizeof(sqlStatement));
+
+	try{
+		sprintf(sqlStatement, "select * from user where userID = '%s';",userID.c_str());
 		mysql_status = mysql_query(mysql, sqlStatement);
 		if(mysql_status)
 		{
@@ -119,7 +142,6 @@ MYSQL_RES selcet_Player(MYSQL *mysql, std::string userName)
 		{
 			printf("result set is empty!");
 		}
-
 	}
 	catch(SQLError e)
 	{
@@ -128,5 +150,4 @@ MYSQL_RES selcet_Player(MYSQL *mysql, std::string userName)
 
 	return mysql_res;
 }
-*/
 #endif /* MYSQL_INJECTION_H_ */

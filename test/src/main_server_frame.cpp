@@ -9,8 +9,6 @@
 #include<mysql/mysql.h>
 #include<jsoncpp/json/json.h>
 
-
-
 #include"player.h"
 #include"main_Room.h"
 #include"mysql_Injection.h"
@@ -30,6 +28,8 @@ void send_msg(char *msg, int len, Player player);
 void send_Json(Json::Value root, int clnt_sock , Player player);
 void send_Json(Json::Value root, Player player);
 void send_Json(Json::Value root, int clnt_sock);
+void send_FriendS(Json::Value root, int clnt_sock);
+void send_FriendA(Json::Value root, int clnt_sock);
 void send_reg(char* msg, int len, int clnt_sock);
 
 
@@ -52,6 +52,7 @@ char game_start[] = "game start!!";
 char unknown_Error[] = "Unknown Error Code!!";
 char error_room[] ="cannot access to room";
 char reg_succes[] = "true";
+
 
 int main(int argc, char *argv[])
 {
@@ -178,20 +179,81 @@ void *handle_clnt(void *arg)
 				reg["what"] = 100;
 				if(reg_Player(MYSQL_Connection,string_Value["userName"].asString(),string_Value["userID"].asString()))
 				{
-					reg["status"] = "1";
+					reg["isValidate"] = "1";
 				}
 				else
 				{
-					reg["status"] = "0";
+					reg["isValidate"] = "0";
 				}
 				send_Json(reg, clnt_sock);
 				break;
 			}
 			case 101:
 			{
+				int mysql_status = 0;
+				MYSQL_RES *mysql_res;
+				MYSQL_ROW mysqlRow;
+
+				char row1[50];
+				char row2[30];
+				char row3[13];
+				char row4[13];
+
 				Json::Value excute;
 				excute["what"] = 101;
-				string_Value["userName"];
+				excute["isUser"] = "0";
+
+				if(mysql_res)
+				{
+					mysql_free_result(mysql_res);
+					mysql_res = NULL;
+				}
+
+				mysql_res = selcet_Player(MYSQL_Connection,string_Value["userID"].asString().c_str());
+
+				while((mysqlRow = mysql_fetch_row(mysql_res)) != NULL)
+				{
+					strcpy(row1,mysqlRow[0]);
+					strcpy(row2,mysqlRow[1]);
+					strcpy(row3,mysqlRow[2]);
+					strcpy(row4,mysqlRow[3]);
+					excute["userID"] = row1;
+					excute["userName"] = row2;
+					excute["rank"] = atoi(row3);
+					excute["cash"] = atoi(row4);
+					excute["isUser"] = "1";
+				}
+				std::cout<<excute<<"\n";
+				send_Json(excute, clnt_sock);
+				break;
+			}
+			case 102:
+			{
+				Json::Value del;
+				del["what"] = 102;
+				if(del_Player(MYSQL_Connection,string_Value["userID"].asString()))
+				{
+					del["isDeleted"] = "1";
+				}
+				else
+				{
+					del["isDeleted"] = "0";
+				}
+				send_Json(del, clnt_sock);
+				break;
+			}
+			case 103:
+			{
+				Json::Value friendS;
+				friendS["what"] = 103;
+				friendS["who"] = player.get_Player_Name();
+				friendS["to"] = string_Value["who"];
+
+				break;
+			}
+			case 104:
+			{
+				Json::Value friendA;
 				break;
 			}
 			case 200:
@@ -213,7 +275,7 @@ void *handle_clnt(void *arg)
 				player.add(atoi(string_Value["4"].asString().c_str()));
 				player.add(atoi(string_Value["5"].asString().c_str()));
 				player.add(atoi(string_Value["6"].asString().c_str()));
-				hand["status"] = "1";
+				hand["status"] = 1;
 				send_Json(hand, clnt_sock, player);
 				break;
 			}
@@ -223,7 +285,7 @@ void *handle_clnt(void *arg)
 				pop["what"] = 301;
 				player.pop(atoi(string_Value["pop"].asString().c_str()));
 				Main_Room.set_pop(player);
-				pop["status"] = "1";
+				pop["status"] = 1;
 				send_Json(pop, clnt_sock, player);
 				break;
 			}
@@ -238,11 +300,11 @@ void *handle_clnt(void *arg)
 				block["what"] = 303;
 				if(Main_Room.minus_Room_Max_Player(string_Value["where"].asInt()))
 				{
-					block["status"] = "1";
+					block["status"] = 1;
 				}
 				else
 				{
-					block["status"] = "0";
+					block["status"] = 0;
 				}
 				send_Json(block,player);
 				break;
@@ -278,7 +340,7 @@ void *handle_clnt(void *arg)
 				}
 				else
 				{
-					make["status"] ="0";
+					make["status"] = 0;
 				}
 				send_Json(make, clnt_sock);
 				break;
@@ -287,7 +349,7 @@ void *handle_clnt(void *arg)
 			{
 				Json::Value in;
 				in["what"] = 401;
-				if(Main_Room.check_Status(atoi(string_Value["what"].asString().c_str())))
+				if(Main_Room.check_Status(atoi(string_Value["roomNum"].asString().c_str())))
 				{
 					pthread_mutex_lock(&mutx);
 					for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
@@ -311,11 +373,11 @@ void *handle_clnt(void *arg)
 
 					in["who"] = player.get_Player_Name();
 					in["where"] = player.get_Room_Num();
-					in["status"] = "1";
+					in["status"] = 1;
 				}
 				else
 				{
-					in["status"] = "0";
+					in["status"] = 0;
 				}
 				send_Json(in,player);
 				break;

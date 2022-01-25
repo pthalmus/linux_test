@@ -27,7 +27,7 @@ int main()
 	std::string hostName = "127.0.0.1";
 	std::string userId = "root";
 	std::string password = "kiiamm12";
-	std::string DB = "GAMEDB";
+	std::string DB = "wander";
 
 	int mysql_status = 0;
 	MYSQL_RES *mysql_res = NULL;
@@ -61,7 +61,7 @@ int main()
 
 	try
 	{
-		std::string sqlSelStatement = "SHOW TABLES";
+		std::string sqlSelStatement = "select * from user;";
 		mysql_status = mysql_query(MYSQL_Connection, sqlSelStatement.c_str());
 
 		if(mysql_status)
