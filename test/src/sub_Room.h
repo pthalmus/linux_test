@@ -13,14 +13,15 @@
 #include<algorithm>
 #include<random>
 #include"player.h"
+#include<string.h>
 #include"checking.h"
 
 
 class subRoom {
 private:
 	int room_Number = 0;
-	char* room_Pwd = NULL;
-	char* room_Name = NULL;
+	std::string room_Name;
+	std::string room_Pwd;
 	int cur_Player = 0;
 	int max_Player = 8;
 	Player room_Player[8];
@@ -37,34 +38,22 @@ public:
 		room_Name = name;
 		max_Player = pMNum;
 	}
-	subRoom(int num, char* name, int pMNum, char* pwd )
+	subRoom(int num, char* name, int pMNum, std::string pwd )
 	{
 		room_Number = num;
 		room_Name = name;
 		room_Pwd = pwd;
 		max_Player = pMNum;
 	}
-	subRoom(const subRoom& origin_Room)
-	{
-		room_Number = origin_Room.room_Number;
-		room_Pwd = origin_Room.room_Pwd;
-		room_Name = origin_Room.room_Name;
-		max_Player = origin_Room.max_Player;
-		for (int i = 0; i < max_Player; i++)
-		{
-			room_Player[i] = origin_Room.room_Player[i];
-		}
-	}
-	~subRoom() {};
 	bool add_Player(Player add_Player, char* msg);
 	void pop_Player(Player pop_Player);
 	void block_Player();
 	void free_Block_Player();
 	bool invite_Player(Player online_Player);
 	int get_Room_Number();
-	int get_Room_PWD();
+	std::string get_Room_PWD();
 	int get_Max_Player();
-	char* get_Room_Name();
+	std::string get_Room_Name();
 	void set_Order();
 	int get_Order();
 	int get_Token();
@@ -76,11 +65,12 @@ public:
 
 bool subRoom::add_Player(Player add_player, char* msg)
 {
-	if (this->room_Pwd == NULL && cur_Player < max_Player)
+	std::string msg1 = msg;
+	if (this->room_Pwd == "" && cur_Player < max_Player)
 	{
 		for (int i = 0; i < max_Player; i++)
 		{
-			if (room_Player[i].get_Player_Name() == NULL)
+			if (room_Player[i].get_Player_Name() == "")
 			{
 				room_Player[i] = add_player;
 				cur_Player++;
@@ -88,11 +78,11 @@ bool subRoom::add_Player(Player add_player, char* msg)
 			}
 		}
 	}
-	else if(this->room_Pwd !=NULL && strcmp(room_Pwd,msg) == 0 && cur_Player < max_Player)
+	else if(this->room_Pwd !="" && room_Pwd == msg1 && cur_Player < max_Player)
 	{
 		for (int i = 0; i < max_Player; i++)
 		{
-			if (room_Player[i].get_Player_Name() == NULL)
+			if (room_Player[i].get_Player_Name() == "")
 			{
 				room_Player[i] = add_player;
 				cur_Player++;
@@ -139,22 +129,15 @@ int subRoom::get_Room_Number()
 {
 	return room_Number;
 }
-int subRoom::get_Room_PWD()
+std::string subRoom::get_Room_PWD()
 {
-	if (room_Pwd == NULL)
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
+	return room_Pwd;
 }
 int subRoom::get_Max_Player()
 {
 	return max_Player;
 }
-char* subRoom::get_Room_Name()
+std::string subRoom::get_Room_Name()
 {
 	return room_Name;
 }

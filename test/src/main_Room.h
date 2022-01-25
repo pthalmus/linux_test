@@ -28,9 +28,10 @@ public:
 			sbroom[i] = subRoom();
 		}
 	};
-	void show_Room_Detail(Json::Value root);
-	bool create_Sub_Room(Json::Value root, Json::Value outPut);
-	void minus_Room_Max_Player(int room_Num);
+	Json::Value show_Room_Detail(int room_Num);
+	bool check_Room_Detail(int room_Num);
+	bool create_Sub_Room(Json::Value root);
+	bool minus_Room_Max_Player(int room_Num);
 	void enter_Room(int room_Num, Player player, char* msg);
 	void out_Room(int room_Num, Player player);
 	void set_pop(Player player);
@@ -40,34 +41,29 @@ public:
 	bool check_Status(int room_Num);
 };
 
-void main_Room::show_Room_Detail(Json::Value root)
+Json::Value main_Room::show_Room_Detail(int room_Num)
 {
-	char pwd;
-	Json::Value roomDetail;
+	Json::Value rd;
 
-	for (int i = 1; i < max_room; i++)
+	if (sbroom[room_Num].get_Room_Number() != 0 && sbroom[room_Num].get_Room_Status() == 0)
 	{
-		if (sbroom[i].get_Room_Number() != 0 && sbroom[i].get_Room_Status() == 0)
-		{
-			if (sbroom[i].get_Room_PWD() == 0)
-			{
-				pwd = 'Y';
-			}
-			else
-			{
-				pwd = 'N';
-			}
-			roomDetail["roomNum"]=i;
-			roomDetail["roomName"]=sbroom[i].get_Room_Name();
-			roomDetail["roomPW"]= pwd;
-			roomDetail["curPlayer"]=sbroom[i].get_Cur_Player();
-			roomDetail["Max_Player"]=sbroom[i].get_Max_Player();
-			roomDetail["status"]=sbroom[i].get_Room_Status();
-			root["roomDetail"] = roomDetail;
-		}
+		rd["roomNum"]= std::to_string(room_Num);
+		rd["roomName"]=sbroom[room_Num].get_Room_Name();
+		rd["roomPW"]=sbroom[room_Num].get_Room_PWD();
+		rd["curPlayer"]=sbroom[room_Num].get_Cur_Player();
+		rd["maxPlayer"]=sbroom[room_Num].get_Max_Player();
 	}
+	return rd;
 }
-bool main_Room::create_Sub_Room(Json::Value root, Json::Value outPut)
+bool main_Room::check_Room_Detail(int room_Num)
+{
+	if (sbroom[room_Num].get_Room_Number() != 0 && sbroom[room_Num].get_Room_Status() == 0)
+	{
+		return true;
+	}
+	return false;
+}
+bool main_Room::create_Sub_Room(Json::Value root)
 {
 	int count;
 	for (int i = 1; i < max_room; i++)
@@ -80,30 +76,29 @@ bool main_Room::create_Sub_Room(Json::Value root, Json::Value outPut)
 	}
 	if (root["roomPW"] == "")
 	{
-		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asCString()));
-		printf("%d번방 %s이(가) 생성되었습니다\n", count, (char*)root["roomName"].asCString());
-		outPut["status"] ="1";
+		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asString().c_str()));
+		printf("%d번방 %s(이)가 생성되었습니다\n", count, (char*)root["roomName"].asCString());
 		return true;
 	}
 	else
 	{
-		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asCString()),(char*)root["roomName"].asCString());
-		printf("비밀번호가 있는 %d번방 %s이(가) 생성되었습니다\n", count, (char*)root["roomName"].asCString());
-		outPut["status"] ="1";
+		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asString().c_str()),root["roomPW"].asString());
+		printf("비밀번호가 있는 %d번방 %s(이)가 생성되었습니다\n", count, (char*)root["roomName"].asCString());
 		return true;
 	}
-	outPut["status"] ="0";
 	return false;
 }
-void main_Room::minus_Room_Max_Player(int room_Num)
+bool main_Room::minus_Room_Max_Player(int room_Num)
 {
-	for(int i=0; i<max_room; i++)
+	for(int i=1; i<max_room; i++)
 	{
 		if(sbroom[i].get_Room_Number() == room_Num)
 		{
 			sbroom[i].block_Player();
+			return true;
 		}
 	}
+	return false;
 }
 void main_Room::enter_Room(int room_Num, Player player, char* msg)
 {

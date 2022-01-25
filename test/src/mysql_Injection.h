@@ -53,14 +53,17 @@ bool del_Room(MYSQL *mysql, int room_Num)
 	mysql_status = mysql_query(mysql, sqlStatement);
 	return true;
 }
-bool reg_Player(MYSQL *mysql, char *user_Name, char* UID)
+
+bool reg_Player(MYSQL *mysql, std::string userName, std::string userID)
 {
 	char sqlStatement[MAX_LENGTH];
 	int mysql_status = 0;
 	MYSQL_RES *mysql_res = NULL;
 
+	memset(&sqlStatement,0,sizeof(sqlStatement));
+
 	try{
-		sprintf(sqlStatement, "INSERT INTO user(user_Name,UID) VALUES('%s','%s');",user_Name,UID);
+		sprintf(sqlStatement, "INSERT INTO user(user_Name,UID) VALUES('%s','%s');",userName.c_str(),userID.c_str());
 		mysql_status = mysql_query(mysql, sqlStatement);
 		if(mysql_status)
 		{
@@ -82,12 +85,48 @@ bool reg_Player(MYSQL *mysql, char *user_Name, char* UID)
 	}
 	catch(SQLError e)
 	{
-	printf("%s\n", e.Label.c_str());
+		printf("%s\n", e.Label.c_str());
 	}
 
 	return false;
 }
+/*
+MYSQL_RES selcet_Player(MYSQL *mysql, std::string userName)
+{
+	char sqlStatement[MAX_LENGTH];
+	int mysql_status = 0;
+	MYSQL_RES *mysql_res = NULL;
+	MYSQL_RES *
 
+	memset(&sqlStatement,0,sizeof(sqlStatement));
 
+	try{
+		sprintf(sqlStatement, "select * from user where userName = %s;",userName);
+		mysql_status = mysql_query(mysql, sqlStatement);
+		if(mysql_status)
+		{
+			throw SQLError( (char*)mysql_error(mysql));
+		}
+		else
+		{
+			mysql_res = mysql_store_result(mysql);
+		}
+		if(mysql_res)
+		{
+			return mysql_res;
+		}
+		else
+		{
+			printf("result set is empty!");
+		}
 
+	}
+	catch(SQLError e)
+	{
+		printf("%s\n", e.Label.c_str());
+	}
+
+	return mysql_res;
+}
+*/
 #endif /* MYSQL_INJECTION_H_ */

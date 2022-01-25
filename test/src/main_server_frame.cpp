@@ -17,7 +17,7 @@
 
 #define JSON_IS_AMALGAMATION
 
-#define BUF_SIZE 128
+#define BUF_SIZE 1024
 #define MAX_CLNT 8
 #define MAX_IP 30
 #define MAX_ROOM 40
@@ -27,16 +27,17 @@ void error_handling(char *msg);
 void * handle_clnt(void *arg);
 void error_Mysql(char *msg);
 void send_msg(char *msg, int len, Player player);
+void send_Json(Json::Value root, int clnt_sock , Player player);
 void send_Json(Json::Value root, Player player);
 void send_Json(Json::Value root, int clnt_sock);
 void send_reg(char* msg, int len, int clnt_sock);
 
 
-
+main_Room Main_Room = main_Room();
 int clnt_cnt[MAX_ROOM];
 int clnt_socks[MAX_ROOM][MAX_CLNT];
 pthread_mutex_t mutx;
-main_Room Main_Room;
+
 
 MYSQL *mysql;
 MYSQL *MYSQL_Connection = NULL;
@@ -125,6 +126,7 @@ int main(int argc, char *argv[])
     printf("Successful binding\n");
 	printf("Waiting client\n");
 
+
     clnt_addr_sz= sizeof(clnt_addr);
     while(1)
     {
@@ -161,73 +163,174 @@ void *handle_clnt(void *arg)
     Player player = Player();
     int count =0;
 
-    std::string input_msg;
     Json::Value string_Value;
     Json::Reader string_Reader;
 
-    std::string temp = "400";
-
     while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
     {
-    	input_msg = msg;
-    	string_Reader.parse(input_msg,string_Value);
-
-    	if(temp.compare(string_Value["what"].asString()) ==0)
+    	string_Reader.parse(msg,string_Value);
+    	std::cout<< msg << "\n";
+    	switch(string_Value["what"].asInt())
     	{
-    		Json::Value make;
-			pthread_mutex_lock(&mutx);
-			for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+			case 100:
 			{
-				if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+				Json::Value reg;
+				reg["what"] = 100;
+				if(reg_Player(MYSQL_Connection,string_Value["userName"].asString(),string_Value["userID"].asString()))
 				{
-					while(i<clnt_cnt[player.get_Room_Num()]-1)
-					{
-						clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
-						i++;
-					}
-					break;
+					reg["status"] = "1";
 				}
+				else
+				{
+					reg["status"] = "0";
+				}
+				send_Json(reg, clnt_sock);
+				break;
 			}
-			clnt_cnt[player.get_Room_Num()]--;
-			pthread_mutex_unlock(&mutx);
-			Main_Room.create_Sub_Room(string_Value,make);
-			player.set_Room_Num(atoi(string_Value["roomNum"].asCString()));
-
-			clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
-			make["what"] = "400";
-			send_Json(make, clnt_sock);
-    	}
-    	else
-    	{
-    		send_msg(unknown_Error,sizeof(unknown_Error), player);
-    	}
-    	/*
-    	switch(string_Value["what"].asString())
-		{
-		case'200': // plane chat format "c&'player name : plane text'"
-			Json::Value chat;
-			ptr = strtok(msg, "&");
-			chat["what"] = "200";
-			chat["who"]=player.get_Player_Name();
-			chat["chat"] = ptr;
-			send_Json(chat, player);
-			break;
-		case'403': // get room details format "r"
-			Json::Value room;
-			room["what"] = "403";
-			Main_Room.show_Room_Detail(room);
-			send_Json(room,clnt_sock);
-			break;
-		case'400': // make room format m&room_Num&room_Name&max_Player&room_pwd(있다면)
-
-			break;
-
-		case'e': // enter room format e&room_Num
-			char enter_Msg[100];
-			ptr = strtok(msg, "&");
-			if(Main_Room.check_Status(atoi(ptr)))
+			case 101:
 			{
+				Json::Value excute;
+				excute["what"] = 101;
+				string_Value["userName"];
+				break;
+			}
+			case 200:
+			{
+				Json::Value chat;
+				chat["what"] = 200;
+				chat["who"]=player.get_Player_Name();
+				chat["chat"] = string_Value["chat"];
+				send_Json(chat, player);
+				break;
+			}
+			case 300:
+			{
+				Json::Value hand;
+				hand["what"] = 300;
+				player.add(atoi(string_Value["1"].asString().c_str()));
+				player.add(atoi(string_Value["2"].asString().c_str()));
+				player.add(atoi(string_Value["3"].asString().c_str()));
+				player.add(atoi(string_Value["4"].asString().c_str()));
+				player.add(atoi(string_Value["5"].asString().c_str()));
+				player.add(atoi(string_Value["6"].asString().c_str()));
+				hand["status"] = "1";
+				send_Json(hand, clnt_sock, player);
+				break;
+			}
+			case 301:
+			{
+				Json::Value pop;
+				pop["what"] = 301;
+				player.pop(atoi(string_Value["pop"].asString().c_str()));
+				Main_Room.set_pop(player);
+				pop["status"] = "1";
+				send_Json(pop, clnt_sock, player);
+				break;
+			}
+				break;
+				/*
+			case 302:
+				break;
+				*/
+			case 303:
+			{
+				Json::Value block;
+				block["what"] = 303;
+				if(Main_Room.minus_Room_Max_Player(string_Value["where"].asInt()))
+				{
+					block["status"] = "1";
+				}
+				else
+				{
+					block["status"] = "0";
+				}
+				send_Json(block,player);
+				break;
+			}
+			case 400:
+			{
+				Json::Value make;
+				make["what"] =400;
+				if(Main_Room.create_Sub_Room(string_Value))
+				{
+					make["status"] ="1";
+					send_Json(make, clnt_sock);
+					clnt_cnt[player.get_Room_Num()]--;
+
+					pthread_mutex_lock(&mutx);
+
+					for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+					{
+						if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+						{
+							while(i<clnt_cnt[player.get_Room_Num()]-1)
+							{
+								clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
+								i++;
+							}
+							break;
+						}
+					}
+					player.set_Room_Num(atoi(string_Value["roomNum"].asString().c_str()));
+					clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
+
+					pthread_mutex_unlock(&mutx);
+				}
+				else
+				{
+					make["status"] ="0";
+				}
+				send_Json(make, clnt_sock);
+				break;
+			}
+			case 401:
+			{
+				Json::Value in;
+				in["what"] = 401;
+				if(Main_Room.check_Status(atoi(string_Value["what"].asString().c_str())))
+				{
+					pthread_mutex_lock(&mutx);
+					for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+					{
+						if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+						{
+							while(i<clnt_cnt[player.get_Room_Num()]-1)
+							{
+								clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
+								i++;
+							}
+							break;
+						}
+					}
+					clnt_cnt[player.get_Room_Num()]--;
+					pthread_mutex_unlock(&mutx);
+
+					player.set_Room_Num(string_Value["where"].asInt());
+					clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
+					Main_Room.enter_Room(player.get_Room_Num(), player, ptr);
+
+					in["who"] = player.get_Player_Name();
+					in["where"] = player.get_Room_Num();
+					in["status"] = "1";
+				}
+				else
+				{
+					in["status"] = "0";
+				}
+				send_Json(in,player);
+				break;
+			}
+			case 402:
+			{
+				Json::Value out;
+				out["what"] = 402;
+				out["who"] = player.get_Player_Name();
+				out["where"] = player.get_Room_Num();
+
+				send_Json(out,player);
+
 				pthread_mutex_lock(&mutx);
+				Main_Room.out_Room(player.get_Room_Num(), player);
 				for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
 				{
 					if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
@@ -241,77 +344,60 @@ void *handle_clnt(void *arg)
 					}
 				}
 				clnt_cnt[player.get_Room_Num()]--;
+				player.set_Room_Num(LOBBY);
+				clnt_socks[LOBBY][clnt_cnt[LOBBY]++]=clnt_sock;
 				pthread_mutex_unlock(&mutx);
-
-				player.set_Room_Num(atoi(ptr));
-				clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
-				Main_Room.enter_Room(player.get_Room_Num(), player, ptr);
-
-				sprintf(enter_Msg, "%s enter room %d", player.get_Player_Name(), player.get_Room_Num());
-				send_msg(enter_Msg, sizeof(enter_Msg), player);
-
 				break;
 			}
-
-			send_msg(error_room, sizeof(error_room), player);
-			break;
-
-		case'o': // out room
-			char out_Msg[100];
-			sprintf(out_Msg, "%s out of room %d", player.get_Player_Name(), player.get_Room_Num());
-			send_msg(out_Msg, sizeof(out_Msg), player);
-
-			pthread_mutex_lock(&mutx);
-			Main_Room.out_Room(player.get_Room_Num(), player);
-			for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+			case 403:
 			{
-				if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+				Json::Value room;
+				room["what"] = 403;
+				int count = atoi(string_Value["roomCnt"].asString().c_str());
+				for(int i=count; i<count+5; i++)
 				{
-					while(i<clnt_cnt[player.get_Room_Num()]-1)
+					if(Main_Room.check_Room_Detail(i))
 					{
-						clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
-						i++;
+						room["detail"].append(Main_Room.show_Room_Detail(i));
 					}
-					break;
 				}
+
+				send_Json(room,clnt_sock);
+				break;
 			}
-			clnt_cnt[player.get_Room_Num()]--;
-			player.set_Room_Num(LOBBY);
-			clnt_socks[LOBBY][clnt_cnt[LOBBY]++]=clnt_sock;
-			pthread_mutex_unlock(&mutx);
-			break;
-		case 'b': // block room capacity
-			ptr = strtok(msg, "&");
-			Main_Room.minus_Room_Max_Player(atoi(ptr));
-			break;
+				/*
+			case 404:
+				break;
+			case 405:
+				break;
+				*/
+			default:
+			{
+				Json::Value error;
+				error["what"] = 900;
+				error["why"] ="Unknown Error Code!!";
+				send_Json(error, clnt_sock);
+				break;
+			}
+    	}
+    	/*
+    	switch(string_Value["what"].asString())
+		{
 		case 's': // game start
 			Main_Room.game_Start(player.get_Room_Num());
 			send_msg(game_start, sizeof(game_start), player);
-			break;
-		case 'h': // submit hand
-			ptr = strtok(msg, "&");
-			ptr = strtok(NULL, "&");
-			ptr = strtok(NULL, "&");
-			while (ptr != NULL)
-			{
-				player.add(atoi(ptr));
-				ptr = strtok(NULL, "&");
-			}
 			break;
 		case 'p': // pop out card
 			ptr = strtok(msg, "&");
 			player.pop(atoi(msg));
 			Main_Room.set_pop(player);
 			break;
-			/*
-			 *
 		case 'v': // invite friends
 			break;
 		case'f': // associate with friends
 			break;
 		case 't': // add BOT player
 			break;
-
 		case '*': // player sign up format *&'player_Name'&'player_UID'
 			ptr = strtok(msg, "&");
 			player.set_Player_Name(msg);
@@ -321,7 +407,6 @@ void *handle_clnt(void *arg)
 				send_reg(reg_succes,sizeof(reg_succes),clnt_sock);
 			}
 			break;
-			 *
  */
     	memset(&msg, 0, sizeof(msg));
     }
@@ -342,6 +427,7 @@ void *handle_clnt(void *arg)
     clnt_cnt[player.get_Room_Num()]--;
     pthread_mutex_unlock(&mutx);
     close(clnt_sock);
+    printf(" chatter (%d/100)\n", clnt_cnt[LOBBY]);
     return NULL;
 }
 
@@ -359,40 +445,52 @@ void send_msg(char* msg, int len, Player player)
 void send_Json(Json::Value root, Player player)
 {
 	std::string jsonadpter;
+	jsonadpter.reserve(1024);
 	Json::StyledWriter writer;
 	jsonadpter = writer.write(root);
 
-	char* msg = (char*)malloc(sizeof(jsonadpter)+10);
-	strcpy(msg,root["what"].asCString());
-	strcpy(msg,jsonadpter.c_str());
 	pthread_mutex_lock(&mutx);
 	for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
 	{
-		write(clnt_socks[player.get_Room_Num()][i], msg, sizeof(msg));
+		write(clnt_socks[player.get_Room_Num()][i], jsonadpter.c_str(), jsonadpter.size());
 	}
 	pthread_mutex_unlock(&mutx);
-	free(msg);
 }
 void send_Json(Json::Value root, int clnt_sock)
 {
 	std::string jsonadpter;
+	jsonadpter.reserve(root.size());
 	Json::StyledWriter writer;
 	jsonadpter = writer.write(root);
 
-	char* msg = (char*)malloc(sizeof(jsonadpter)+10);
-	strcpy(msg,root["what"].asCString());
-	strcpy(msg,jsonadpter.c_str());
 	pthread_mutex_lock(&mutx);
 	for (int i=0; i<clnt_cnt[LOBBY]; i++)
 	{
 		if(clnt_socks[LOBBY][i] == clnt_sock)
 		{
-			write(clnt_socks[LOBBY][i], msg, sizeof(msg));
+			write(clnt_socks[LOBBY][i], jsonadpter.c_str(), jsonadpter.size());
 			break;
 		}
 	}
 	pthread_mutex_unlock(&mutx);
-	free(msg);
+}
+void send_Json(Json::Value root, int clnt_sock, Player player)
+{
+	std::string jsonadpter;
+	jsonadpter.reserve(root.size());
+	Json::StyledWriter writer;
+	jsonadpter = writer.write(root);
+
+	pthread_mutex_lock(&mutx);
+	for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+	{
+		if(clnt_socks[player.get_Room_Num()][i] == clnt_sock)
+		{
+			write(clnt_socks[player.get_Room_Num()][i], jsonadpter.c_str(), jsonadpter.size());
+			break;
+		}
+	}
+	pthread_mutex_unlock(&mutx);
 }
 void send_reg(char* msg, int len, int clnt_sock)
 {

@@ -11,12 +11,13 @@
 #include<vector>
 #include<algorithm>
 #include<random>
+#include<string.h>
 
 class Player {
 private:
 	int player_num = 0;
 	int room_Number = 0;
-	char* player_Name;
+	std::string player_Name;
 	int last_pop = 0;
 	int win_Stack = 0;
 	int bot_Count = 0;
@@ -25,22 +26,15 @@ private:
 public:
 	Player()
 	{
-		char temp_name[] = "temp_name";
-		player_Name = temp_name;
-	}
-	Player(const Player& origin)
-	{
-		player_num = origin.player_num;
-		room_Number = origin.room_Number;
-		player_Name = origin.player_Name;
+		player_Name = "temp_name";
 	}
 	void pop(int index);
 	void add(int add);
 	std::vector<int> get_Hand();
 	int get_Player_Num();
 	void set_Player_Num(int num);
-	char* get_Player_Name();
-	void set_Player_Name(char* name);
+	std::string get_Player_Name();
+	void set_Player_Name(std::string name);
 	int get_Last_Pop();
 	int get_Win_Stack();
 	void up_Win_Stack();
@@ -84,11 +78,11 @@ void Player::set_Player_Num(int num)
 {
 	this->player_num = num;
 }
-char* Player::get_Player_Name()
+std::string Player::get_Player_Name()
 {
 	return player_Name;
 }
-void Player::set_Player_Name(char* name)
+void Player::set_Player_Name(std::string name)
 {
 	player_Name = name;
 }
