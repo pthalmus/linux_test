@@ -339,7 +339,6 @@ void *handle_clnt(void *arg)
 					}
 					player.set_Room_Num(Num400);
 					clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
-
 					pthread_mutex_unlock(&mutx);
 				}
 				else
