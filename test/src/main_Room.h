@@ -44,6 +44,9 @@ public:
 	std::string get_room_Cur_Player(int room_Num);
 	std::string get_room_Max_Player(int room_Num);
 	std::string get_room_Player(int room_Num, int count);
+	std::string get_room_Leader(int room_Num);
+
+
 	int check_room_Player(int room_Num,int count);
 	void lock_Room(int room_Num, int point);
 	void unlock_Room(int room_Num, int point);
@@ -159,6 +162,10 @@ std::string main_Room::get_room_Max_Player(int room_Num)
 std::string main_Room::get_room_Player(int room_Num,int count)
 {
 	return sbroom[room_Num].get_Player_Name(count);
+}
+std::string main_Room::get_room_Leader(int room_Num)
+{
+	return std::to_string(sbroom[room_Num].get_Leader());
 }
 int main_Room::check_room_Player(int room_Num,int count)
 {

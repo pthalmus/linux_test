@@ -442,6 +442,7 @@ void *handle_clnt(void *arg)
 					in["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 					in["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 					in["roomNum"] = std::to_string(player.get_Room_Num());
+					in["leader"] = Main_Room.get_room_Captain(player.get_Room_Num());
 
 					std::string player_Count = "player";
 					for(int i=0; i<8; i++)
@@ -489,6 +490,7 @@ void *handle_clnt(void *arg)
 					out["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 					out["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 					out["roomNum"] = std::to_string(player.get_Room_Num());
+					out["leader"] = Main_Room.get_room_Captain(player.get_Room_Num());
 					std::string player_Count = "player";
 					for(int i=0; i<8; i++)
 					{
@@ -566,6 +568,7 @@ void *handle_clnt(void *arg)
 				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 				change["roomNum"] = std::to_string(player.get_Room_Num());
+				change["leader"] = Main_Room.get_room_Leader(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
@@ -604,6 +607,7 @@ void *handle_clnt(void *arg)
 				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 				change["roomNum"] = std::to_string(player.get_Room_Num());
+				change["leader"] = Main_Room.get_room_Captain(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
@@ -641,6 +645,7 @@ void *handle_clnt(void *arg)
 				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 				change["roomNum"] = std::to_string(player.get_Room_Num());
+				change["leader"] = Main_Room.get_room_Captain(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
@@ -678,6 +683,7 @@ void *handle_clnt(void *arg)
 				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 				change["roomNum"] = std::to_string(player.get_Room_Num());
+				change["leader"] = Main_Room.get_room_Captain(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)

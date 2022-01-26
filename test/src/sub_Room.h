@@ -29,7 +29,8 @@ private:
 	int token = 0;
 	std::vector<int> pop_Inventory;
 	int count =0;
-	int room_Status =0;
+	int room_Status = 0;
+	int room_Leader = 1;
 public:
 	subRoom() {};
 	subRoom(int num, std::string name, int pMNum)
@@ -73,6 +74,8 @@ public:
 	std::string get_Player_Name(int count);
 	void add_BOT(int num);
 	void pop_BOT(int num);
+	void set_Leader(int num);
+	int get_Leader();
 };
 
 void subRoom::add_Player(Player add_player)
@@ -222,5 +225,13 @@ void subRoom::pop_BOT(int num)
 		room_Player[num].refresh_Hand();
 		cur_Player--;
 	}
+}
+void subRoom::set_Leader(int num)
+{
+	room_Leader = num;
+}
+int subRoom::get_Leader()
+{
+	return room_Leader;
 }
 #endif /* SUB_ROOM_H_ */
