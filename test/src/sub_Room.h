@@ -36,7 +36,7 @@ public:
 	{
 		room_Number = num;
 		room_Name = name;
-		for(int i=max_Player; i>pMNum; i--)
+		for(int i=max_Player; i>=pMNum; i--)
 		{
 			room_Player[i].set_Player_Name("Locked");
 		}

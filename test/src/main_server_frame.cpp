@@ -27,7 +27,6 @@ void send_msg(char *msg, int len, Player player);
 void send_Json(Json::Value root, int clnt_sock , Player player);
 void send_Json(Json::Value root, Player player);
 void send_Json(Json::Value root, int clnt_sock);
-void send_Detail(Json::Value root);
 void send_reg(char* msg, int len, int clnt_sock);
 
 
@@ -354,26 +353,28 @@ void *handle_clnt(void *arg)
 					make["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 					make["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 					make["roomNum"] = std::to_string(player.get_Room_Num());
+
+					std::string player_Count = "player";
 					for(int i=0; i<8; i++)
 					{
 						if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 						{
-							player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+							player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 						}
 						else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
 						{
-							player_in_room[std::to_string(i+1)] = "Bot";
+							player_in_room[player_Count] = "Bot";
 						}
 						else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
 						{
-							player_in_room[std::to_string(i+1)] = "Locked";
+							player_in_room[player_Count] ="Locked";
 						}
 						else
 						{
-							player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+							player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 						}
+						make["players"].append(player_in_room);
 					}
-					make["players"] = player_in_room;
 					make["status"] ="1";
 					send_Json(make, clnt_sock);
 
@@ -436,26 +437,27 @@ void *handle_clnt(void *arg)
 					in["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 					in["roomNum"] = std::to_string(player.get_Room_Num());
 
+					std::string player_Count = "player";
 					for(int i=0; i<8; i++)
 					{
 						if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 						{
-							player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+							player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 						}
 						else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
 						{
-							player_in_room[std::to_string(i+1)] = "Bot";
+							player_in_room[player_Count] = "Bot";
 						}
 						else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
 						{
-							player_in_room[std::to_string(i+1)] = "Locked";
+							player_in_room[player_Count] ="Locked";
 						}
 						else
 						{
-							player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+							player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 						}
+						in["players"].append(player_in_room);
 					}
-					in["players"] = player_in_room;
 					in["status"] = 1;
 				}
 				else
@@ -491,26 +493,27 @@ void *handle_clnt(void *arg)
 				out["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
 				out["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
 				out["roomNum"] = std::to_string(player.get_Room_Num());
+				std::string player_Count = "player";
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
 					{
-						player_in_room[std::to_string(i+1)] = "Bot";
+						player_in_room[player_Count] = "Bot";
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
 					{
-						player_in_room[std::to_string(i+1)] = "Locked";
+						player_in_room[player_Count] ="Locked";
 					}
 					else
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
+					out["players"].append(player_in_room);
 				}
-				out["players"] = player_in_room;
 				send_Json(out,player);
 
 				player.set_Room_Num(LOBBY);
@@ -538,26 +541,28 @@ void *handle_clnt(void *arg)
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
+				std::string player_Count = "player";
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
 					{
-						player_in_room[std::to_string(i+1)] = "Bot";
+						player_in_room[player_Count] = "Bot";
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
 					{
-						player_in_room[std::to_string(i+1)] = "Locked";
+						player_in_room[player_Count] ="Locked";
 					}
 					else
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
+					change["players"].append(player_in_room);
 				}
-				change["players"] = player_in_room;
+
 				break;
 			}
 			case 405: // 방 최대인원 늘리기
@@ -566,26 +571,28 @@ void *handle_clnt(void *arg)
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
+				std::string player_Count = "player";
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
 					{
-						player_in_room[std::to_string(i+1)] = "Bot";
+						player_in_room[player_Count] = "Bot";
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
 					{
-						player_in_room[std::to_string(i+1)] = "Locked";
+						player_in_room[player_Count] ="Locked";
 					}
 					else
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
+					change["players"].append(player_in_room);
 				}
-				change["players"] = player_in_room;
+
 				break;
 			}
 			case 406: // 방 봇 늘리기
@@ -594,26 +601,27 @@ void *handle_clnt(void *arg)
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
+				std::string player_Count = "player";
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
 					{
-						player_in_room[std::to_string(i+1)] = "Bot";
+						player_in_room[player_Count] = "Bot";
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
 					{
-						player_in_room[std::to_string(i+1)] = "Locked";
+						player_in_room[player_Count] ="Locked";
 					}
 					else
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
+					change["players"].append(player_in_room);
 				}
-				change["players"] = player_in_room;
 				break;
 			}
 			case 407: // 방 봇 줄이기
@@ -622,26 +630,28 @@ void *handle_clnt(void *arg)
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
+				std::string player_Count = "player";
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
 					{
-						player_in_room[std::to_string(i+1)] = "Bot";
+						player_in_room[player_Count] = "Bot";
 					}
 					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
 					{
-						player_in_room[std::to_string(i+1)] = "Locked";
+						player_in_room[player_Count] = "Locked";
 					}
 					else
 					{
-						player_in_room[std::to_string(i+1)] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
 				}
-				change["players"] = player_in_room;
+				change["players"].append( player_in_room);
+
 				break;
 			}
 			default: //이외의 잘못된 플래그
@@ -754,20 +764,6 @@ void send_Json(Json::Value root, int clnt_sock, Player player)
 			write(clnt_socks[player.get_Room_Num()][i], jsonadpter.c_str(), jsonadpter.size());
 			break;
 		}
-	}
-	pthread_mutex_unlock(&mutx);
-}
-void send_Detail(Json::Value root)
-{
-	std::string jsonadpter;
-	jsonadpter.reserve(root.size());
-	Json::StyledWriter writer;
-	jsonadpter = writer.write(root);
-
-	pthread_mutex_lock(&mutx);
-	for (int i=0; i<clnt_cnt[LOBBY]; i++)
-	{
-		write(clnt_socks[LOBBY][i], jsonadpter.c_str(), jsonadpter.size());
 	}
 	pthread_mutex_unlock(&mutx);
 }
