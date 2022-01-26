@@ -24,10 +24,6 @@ private:
 	std::vector<int> hand;
 	bool loosing = false;
 public:
-	Player()
-	{
-		player_Name = "temp_name";
-	}
 	void pop(int index);
 	void add(int add);
 	std::vector<int> get_Hand();
@@ -43,6 +39,7 @@ public:
 	void set_Random_Hand();
 	int pop_Random(int num, int token);
 	void set_Bot_Start();
+	void refresh_Hand();
 };
 
 void Player::pop(int index)
@@ -169,6 +166,10 @@ void Player::set_Bot_Start()
 {
 	this->set_Random_Hand();
 	bot_Count = 1;
+}
+void Player::refresh_Hand()
+{
+	std::vector<int>().swap(hand);
 }
 
 #endif /* PLAYER_H_ */
