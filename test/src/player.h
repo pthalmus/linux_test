@@ -81,7 +81,14 @@ std::string Player::get_Player_Name()
 }
 void Player::set_Player_Name(std::string name)
 {
-	player_Name = name;
+	if(name.size() == 0)
+	{
+		player_Name = "";
+	}
+	else
+	{
+		player_Name = name;
+	}
 }
 int Player::get_Last_Pop()
 {

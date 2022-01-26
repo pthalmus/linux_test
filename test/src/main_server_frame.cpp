@@ -26,8 +26,9 @@ void error_Mysql(char *msg);
 void send_msg(char *msg, int len, Player player);
 void send_Json(Json::Value root, int clnt_sock , Player player);
 void send_Json(Json::Value root, Player player);
+void send_Without(Json::Value root,int clnt_sock, Player player);
 void send_Json(Json::Value root, int clnt_sock);
-void send_reg(char* msg, int len, int clnt_sock);
+void send_Json(Json::Value root, int clnt_sock, int room_Num);
 
 
 main_Room Main_Room = main_Room();
@@ -346,7 +347,10 @@ void *handle_clnt(void *arg)
 				if((Num400 = Main_Room.create_Sub_Room(string_Value)) != 0)
 				{
 					player.set_Room_Num(Num400);
+
+					pthread_mutex_lock(&mutx);
 					Main_Room.enter_Room(player.get_Room_Num(), player);
+					pthread_mutex_unlock(&mutx);
 
 					make["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
 					make["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
@@ -425,11 +429,13 @@ void *handle_clnt(void *arg)
 							break;
 						}
 					}
-					pthread_mutex_unlock(&mutx);
+
 
 					player.set_Room_Num(std::stoi(string_Value["roomNum"].asString()));
 					clnt_socks[player.get_Room_Num()][clnt_cnt[player.get_Room_Num()]++]=clnt_sock;
 					Main_Room.enter_Room(player.get_Room_Num(), player);
+
+					pthread_mutex_unlock(&mutx);
 
 					in["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
 					in["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
@@ -459,66 +465,77 @@ void *handle_clnt(void *arg)
 						in["players"].append(player_in_room);
 					}
 					in["status"] = 1;
+					send_Json(in,player);
 				}
 				else
 				{
 					in["status"] = 0;
+					send_Json(in,clnt_sock);
 				}
-				send_Json(in,player);
 				break;
 			}
 			case 402: //방 퇴장
 			{
 				Json::Value out;
 				Json::Value player_in_room;
-				pthread_mutex_lock(&mutx);
 
-				Main_Room.out_Room(player.get_Room_Num(), player);
-				for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+				if(player.get_Room_Num() != LOBBY)
 				{
-					if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+					Main_Room.out_Room(player.get_Room_Num(), player);
+
+					out["what"] = 401;
+					out["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
+					out["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
+					out["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
+					out["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
+					out["roomNum"] = std::to_string(player.get_Room_Num());
+					std::string player_Count = "player";
+					for(int i=0; i<8; i++)
 					{
-						while(i<clnt_cnt[player.get_Room_Num()]-1)
+						if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
 						{
-							clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
-							i++;
+							player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 						}
-						break;
+						else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
+						{
+							player_in_room[player_Count] = "Bot";
+						}
+						else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
+						{
+							player_in_room[player_Count] ="Locked";
+						}
+						else
+						{
+							player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
+						}
+						out["players"].append(player_in_room);
 					}
-				}
-				clnt_cnt[player.get_Room_Num()]--;
-				out["what"] = 402;
-				out["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
-				out["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
-				out["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
-				out["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
-				out["roomNum"] = std::to_string(player.get_Room_Num());
-				std::string player_Count = "player";
-				for(int i=0; i<8; i++)
-				{
-					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
-					{
-						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
-					}
-					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 2)
-					{
-						player_in_room[player_Count] = "Bot";
-					}
-					else if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 3)
-					{
-						player_in_room[player_Count] ="Locked";
-					}
-					else
-					{
-						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
-					}
-					out["players"].append(player_in_room);
-				}
-				send_Json(out,player);
+					send_Without(out,clnt_sock, player);
+					out["what"] = 402;
+					send_Json(out,clnt_sock, player.get_Room_Num());
 
-				player.set_Room_Num(LOBBY);
-				clnt_socks[LOBBY][clnt_cnt[LOBBY]++]=clnt_sock;
-				pthread_mutex_unlock(&mutx);
+
+
+					pthread_mutex_lock(&mutx);
+					for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
+					{
+						if (clnt_sock==clnt_socks[player.get_Room_Num()][i])
+						{
+							while(i<clnt_cnt[player.get_Room_Num()]-1)
+							{
+								clnt_socks[player.get_Room_Num()][i]=clnt_socks[player.get_Room_Num()][i+1];
+								i++;
+							}
+							break;
+						}
+					}
+					clnt_cnt[player.get_Room_Num()]--;
+
+					player.set_Room_Num(LOBBY);
+					clnt_socks[LOBBY][clnt_cnt[LOBBY]++]=clnt_sock;
+					pthread_mutex_unlock(&mutx);
+				}
+
 				break;
 			}
 			case 403: //방 정보 불러오기
@@ -537,11 +554,18 @@ void *handle_clnt(void *arg)
 			}
 			case 404: // 방 최대인원 줄이기
 			{
-				Main_Room.lock_Room(player.get_Room_Num());
+				pthread_mutex_lock(&mutx);
+				Main_Room.lock_Room(player.get_Room_Num(), std::stoi(string_Value["lockNum"].asString()));
+				pthread_mutex_unlock(&mutx);
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
 				std::string player_Count = "player";
+				change["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
+				change["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
+				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
+				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
+				change["roomNum"] = std::to_string(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
@@ -563,15 +587,23 @@ void *handle_clnt(void *arg)
 					change["players"].append(player_in_room);
 				}
 
+				send_Json(change,player);
 				break;
 			}
 			case 405: // 방 최대인원 늘리기
 			{
-				Main_Room.unlock_Room(player.get_Room_Num());
+				pthread_mutex_lock(&mutx);
+				Main_Room.unlock_Room(player.get_Room_Num(),std::stoi(string_Value["lockNum"].asString()));
+				pthread_mutex_unlock(&mutx);
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
 				std::string player_Count = "player";
+				change["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
+				change["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
+				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
+				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
+				change["roomNum"] = std::to_string(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
@@ -592,16 +624,23 @@ void *handle_clnt(void *arg)
 					}
 					change["players"].append(player_in_room);
 				}
-
+				send_Json(change,player);
 				break;
 			}
 			case 406: // 방 봇 늘리기
 			{
-				Main_Room.add_BOT(player.get_Room_Num());
+				pthread_mutex_lock(&mutx);
+				Main_Room.add_BOT(player.get_Room_Num(),std::stoi(string_Value["botNum"].asString()));
+				pthread_mutex_unlock(&mutx);
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
 				std::string player_Count = "player";
+				change["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
+				change["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
+				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
+				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
+				change["roomNum"] = std::to_string(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
@@ -622,15 +661,23 @@ void *handle_clnt(void *arg)
 					}
 					change["players"].append(player_in_room);
 				}
+				send_Json(change,player);
 				break;
 			}
 			case 407: // 방 봇 줄이기
 			{
-				Main_Room.pop_BOT(player.get_Room_Num());
+				pthread_mutex_lock(&mutx);
+				Main_Room.pop_BOT(player.get_Room_Num(),std::stoi(string_Value["botNum"].asString()));
+				pthread_mutex_unlock(&mutx);
 				Json::Value change;
 				Json::Value player_in_room;
 				change["what"] = 401;
 				std::string player_Count = "player";
+				change["roomName"] = Main_Room.get_room_Name(player.get_Room_Num());
+				change["roomPW"] = Main_Room.get_room_PW(player.get_Room_Num());
+				change["curPlayer"] = Main_Room.get_room_Cur_Player(player.get_Room_Num());
+				change["maxPlayer"] = Main_Room.get_room_Max_Player(player.get_Room_Num());
+				change["roomNum"] = std::to_string(player.get_Room_Num());
 				for(int i=0; i<8; i++)
 				{
 					if(Main_Room.check_room_Player(player.get_Room_Num(),i) == 1)
@@ -649,9 +696,17 @@ void *handle_clnt(void *arg)
 					{
 						player_in_room[player_Count] = Main_Room.get_room_Player(player.get_Room_Num(),i);
 					}
+					change["players"].append( player_in_room);
 				}
-				change["players"].append( player_in_room);
-
+				send_Json(change,player);
+				break;
+			}
+			case 408:
+			{
+				Json::Value kick;
+				kick["what"] = 408;
+				kick["kickNum"] = string_Value["kickNum"];
+				send_Json(kick,player);
 				break;
 			}
 			default: //이외의 잘못된 플래그
@@ -767,20 +822,40 @@ void send_Json(Json::Value root, int clnt_sock, Player player)
 	}
 	pthread_mutex_unlock(&mutx);
 }
-void send_reg(char* msg, int len, int clnt_sock)
+void send_Without(Json::Value root,int clnt_sock, Player player)
 {
-	printf("%s \n",msg);
+	std::string jsonadpter;
+	jsonadpter.reserve(1024);
+	Json::StyledWriter writer;
+	jsonadpter = writer.write(root);
+
 	pthread_mutex_lock(&mutx);
-	for (int i=0; i<clnt_cnt[LOBBY]; i++)
+	for (int i=0; i<clnt_cnt[player.get_Room_Num()]; i++)
 	{
-		if(clnt_socks[LOBBY][i] == clnt_sock)
+		if(clnt_socks[player.get_Room_Num()][i] != clnt_sock)
 		{
-			write(clnt_socks[LOBBY][i], msg, len);
+			write(clnt_socks[player.get_Room_Num()][i], jsonadpter.c_str(), jsonadpter.size());
+		}
+	}
+	pthread_mutex_unlock(&mutx);
+}
+void send_Json(Json::Value root, int clnt_sock, int room_Num)
+{
+	std::string jsonadpter;
+	jsonadpter.reserve(root.size());
+	Json::StyledWriter writer;
+	jsonadpter = writer.write(root);
+
+	pthread_mutex_lock(&mutx);
+	for (int i=0; i<clnt_cnt[room_Num]; i++)
+	{
+		if(clnt_socks[room_Num][i] == clnt_sock)
+		{
+			write(clnt_socks[room_Num][i], jsonadpter.c_str(), jsonadpter.size());
 			break;
 		}
 	}
 	pthread_mutex_unlock(&mutx);
-
 }
 
 void error_handling(char *msg)

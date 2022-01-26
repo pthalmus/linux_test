@@ -32,23 +32,23 @@ private:
 	int room_Status =0;
 public:
 	subRoom() {};
-	subRoom(int num, char* name, int pMNum)
+	subRoom(int num, std::string name, int pMNum)
 	{
 		room_Number = num;
 		room_Name = name;
-		for(int i=max_Player; i>=pMNum; i--)
+		for(int i=pMNum; i<max_Player; i++)
 		{
 			room_Player[i].set_Player_Name("Locked");
 		}
 		max_Player = pMNum;
 
 	}
-	subRoom(int num, char* name, int pMNum, std::string pwd )
+	subRoom(int num, std::string name, int pMNum, std::string pwd )
 	{
 		room_Number = num;
 		room_Name = name;
 		room_Pwd = pwd;
-		for(int i=max_Player; i>pMNum; i--)
+		for(int i=pMNum; i<max_Player; i++)
 		{
 			room_Player[i].set_Player_Name("Locked");
 		}
@@ -56,8 +56,8 @@ public:
 	}
 	void add_Player(Player add_Player);
 	void pop_Player(Player pop_Player);
-	void block_Player();
-	void free_Block_Player();
+	void block_Player(int num);
+	void free_Block_Player(int num);
 	bool invite_Player(Player online_Player);
 	int get_Room_Number();
 	std::string get_Room_PWD();
@@ -71,8 +71,8 @@ public:
 	void set_Room_Status(int status);
 	int get_Room_Status();
 	std::string get_Player_Name(int count);
-	void add_BOT();
-	void pop_BOT();
+	void add_BOT(int num);
+	void pop_BOT(int num);
 };
 
 void subRoom::add_Player(Player add_player)
@@ -94,29 +94,25 @@ void subRoom::pop_Player(Player pop_player)
 {
 	for (int i = 0; i < max_Player; i++)
 	{
-		if (room_Player->get_Player_Name() == pop_player.get_Player_Name())
+		if (room_Player[i].get_Player_Name().compare(pop_player.get_Player_Name())  == 0 )
 		{
-			while (i < max_Player - 1)
-			{
-				room_Player[i] = room_Player[i + 1];
-				i++;
-			}
+			room_Player[i].set_Player_Name("");
 			cur_Player--;
 			break;
 		}
 	}
 }
-void subRoom::block_Player()
+void subRoom::block_Player(int num)
 {
-	room_Player[max_Player].set_Player_Name("Locked");
+	room_Player[num].set_Player_Name("Locked");
 	max_Player--;
 }
-void subRoom::free_Block_Player()
+void subRoom::free_Block_Player(int num)
 {
 	if (max_Player <= 7)
 	{
 		max_Player++;
-		room_Player[max_Player].set_Player_Name("");
+		room_Player[num].set_Player_Name("");
 	}
 }
 bool subRoom::invite_Player(Player online_Player)
@@ -208,30 +204,23 @@ std::string subRoom::get_Player_Name(int count)
 {
 	return room_Player[count].get_Player_Name();
 }
-void subRoom::add_BOT()
+void subRoom::add_BOT(int num)
 {
-	for(int i=max_Player; i>1; i--)
+	std::string botName = "BOT";
+	if(cur_Player < max_Player)
 	{
-		if(room_Player[i].get_Player_Name().size()==0)
-		{
-			room_Player[i].set_Player_Name("BOT");
-			room_Player[i].set_Random_Hand();
-			cur_Player++;
-			break;
-		}
+		room_Player[num].set_Player_Name(botName);
+		room_Player[num].set_Random_Hand();
+		cur_Player++;
 	}
 }
-void subRoom::pop_BOT()
+void subRoom::pop_BOT(int num)
 {
-	for(int i=0; i< max_Player; i++)
+	if(room_Player[num].get_Player_Name().compare("BOT") == 0)
 	{
-		if(room_Player[i].get_Player_Name()== "BOT")
-		{
-			room_Player[i].set_Player_Name("");
-			room_Player[i].refresh_Hand();
-			cur_Player++;
-			break;
-		}
+		room_Player[num].set_Player_Name("");
+		room_Player[num].refresh_Hand();
+		cur_Player--;
 	}
 }
 #endif /* SUB_ROOM_H_ */

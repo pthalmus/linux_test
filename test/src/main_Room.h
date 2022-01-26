@@ -31,7 +31,6 @@ public:
 	Json::Value show_Room_Detail(int room_Num);
 	bool check_Room_Detail(int room_Num);
 	int create_Sub_Room(Json::Value root);
-	bool minus_Room_Max_Player(int room_Num);
 	void enter_Room(int room_Num, Player player);
 	void out_Room(int room_Num, Player player);
 	std::string set_pop(Player player);
@@ -46,10 +45,10 @@ public:
 	std::string get_room_Max_Player(int room_Num);
 	std::string get_room_Player(int room_Num, int count);
 	int check_room_Player(int room_Num,int count);
-	void lock_Room(int room_Num);
-	void unlock_Room(int room_Num);
-	void add_BOT(int room_Num);
-	void pop_BOT(int room_Num);
+	void lock_Room(int room_Num, int point);
+	void unlock_Room(int room_Num, int point);
+	void add_BOT(int room_Num, int point);
+	void pop_BOT(int room_Num, int point);
 };
 
 Json::Value main_Room::show_Room_Detail(int room_Num)
@@ -85,31 +84,19 @@ int main_Room::create_Sub_Room(Json::Value root)
 			break;
 		}
 	}
-	if (root["roomPW"] == "")
+	if (root["roomPW"].asString().size() == 0)
 	{
-		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asString().c_str()));
+		sbroom[count] = subRoom(count, root["roomName"].asString(),stoi(root["maxPlayer"].asString()));
 		printf("%d번방 %s(이)가 생성되었습니다\n", count, (char*)root["roomName"].asCString());
 		return count;
 	}
 	else
 	{
-		sbroom[count] = subRoom(count, (char*)root["roomName"].asCString(),atoi(root["maxPlayer"].asString().c_str()),root["roomPW"].asString());
+		sbroom[count] = subRoom(count, root["roomName"].asString(),stoi(root["maxPlayer"].asString()),root["roomPW"].asString());
 		printf("비밀번호가 있는 %d번방 %s(이)가 생성되었습니다\n", count, (char*)root["roomName"].asCString());
 		return count;
 	}
 	return 0;
-}
-bool main_Room::minus_Room_Max_Player(int room_Num)
-{
-	for(int i=1; i<max_room; i++)
-	{
-		if(sbroom[i].get_Room_Number() == room_Num)
-		{
-			sbroom[i].block_Player();
-			return true;
-		}
-	}
-	return false;
 }
 void main_Room::enter_Room(int room_Num, Player player)
 {
@@ -175,13 +162,14 @@ std::string main_Room::get_room_Player(int room_Num,int count)
 }
 int main_Room::check_room_Player(int room_Num,int count)
 {
+	ssize_t pos;
 	if(get_room_Player(room_Num,count).size() !=0)
 	{
-		if(get_room_Player(room_Num,count) == "BOT")
+		if((pos = get_room_Player(room_Num,count).find("BOT", 0, 3)) != std::string::npos)
 		{
 			return 2;
 		}
-		else if(get_room_Player(room_Num,count) == "Lock")
+		else if(get_room_Player(room_Num,count).compare("Locked") == 0 )
 		{
 			return 3;
 		}
@@ -192,20 +180,20 @@ int main_Room::check_room_Player(int room_Num,int count)
 	}
 	return 0;
 }
-void main_Room::lock_Room(int room_Num)
+void main_Room::lock_Room(int room_Num, int point)
 {
-	sbroom[room_Num].block_Player();
+	sbroom[room_Num].block_Player(point);
 }
-void main_Room::unlock_Room(int room_Num)
+void main_Room::unlock_Room(int room_Num, int point)
 {
-	sbroom[room_Num].free_Block_Player();
+	sbroom[room_Num].free_Block_Player(point);
 }
-void main_Room::add_BOT(int room_Num)
+void main_Room::add_BOT(int room_Num, int point)
 {
-	sbroom[room_Num].add_BOT();
+	sbroom[room_Num].add_BOT(point);
 }
-void main_Room::pop_BOT(int room_Num)
+void main_Room::pop_BOT(int room_Num, int point)
 {
-	sbroom[room_Num].pop_BOT();
+	sbroom[room_Num].pop_BOT(point);
 }
 #endif /* MAIN_ROOM_H_ */
