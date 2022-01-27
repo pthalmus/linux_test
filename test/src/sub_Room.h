@@ -32,6 +32,7 @@ private:
 	int room_Status = 2;
 	int room_Host = 0;
 	int hand_Count = 0;
+	int die_Player = 0;
 public:
 	subRoom() {};
 	subRoom(int num, std::string name, int pMNum)
@@ -79,6 +80,7 @@ public:
 	int get_Token();
 
 	void set_Room_Status(int status);
+	void re_Pop_Bot();
 	int get_Room_Status();
 
 	bool check_BOT(Player player);
@@ -195,13 +197,29 @@ std::string subRoom::push_Pop(int num, Player player)
 		if(room_Player[i].get_Player_Name().compare(player.get_Player_Name()) == 0)
 		{
 			room_Player[i].pop(num);
+			if(room_Player[i].losing)
+			{
+				die_Player++;
+			}
 		}
 	}
 	count++;
 	int winner =0;
 	std::string output;
 
-	if(count == cur_Player)
+	if((cur_Player - die_Player) == 1)
+	{
+		for(int i = 0; i< 8; i++)
+		{
+			if(!room_Player[i].losing)
+			{
+				return room_Player[i].get_Player_Name();
+			}
+		}
+	}
+
+
+	if(count == (cur_Player - die_Player))
 	{
 		winner = calculrating(pop_Inventory);
 		if( winner !=20 )
@@ -228,11 +246,16 @@ std::string subRoom::add_Item(std::string value)
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<int> dis(0, cur_Player-2);
+	std::uniform_int_distribution<int> dis(0, cur_Player -2 - die_Player);
 	int check;
 	check = dis(gen);
 	int item = pop_Inventory.at(check);
 	std::string loserName;
+	std::string win = "Win";
+	if((cur_Player - die_Player) == 1)
+	{
+		return win;
+	}
 
 	for(int i=0; i<8; i++)
 	{
@@ -281,6 +304,17 @@ void subRoom::set_Room_Status(int status)
 		}
 	}
 }
+void subRoom::re_Pop_Bot()
+{
+	for(int i = 0; i< 8; i ++)
+	{
+		if(room_Player[i].check_Bot() == 1)
+		{
+			push_Pop(room_Player[i].pop_Random(order, token), room_Player[i]);
+			add_Hand_Count();
+		}
+	}
+}
 int subRoom::get_Room_Status()
 {
 	return room_Status;
@@ -290,7 +324,7 @@ int subRoom::get_Room_Status()
 void subRoom::add_BOT(int num)
 {
 	std::string botName = "BOT";
-	botName.append(std::to_string(num));
+	botName.append(std::to_string(num+1));
 	if(cur_Player < max_Player)
 	{
 		room_Player[num].set_Player_Name(botName);

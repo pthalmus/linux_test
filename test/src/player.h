@@ -22,7 +22,7 @@ public:
 	int win_Stack = 0;
 	int bot_Count = 0;
 	std::vector<int> hand;
-	bool loosing = false;
+	bool losing = false;
 
 	void pop(int index);
 	void add(int add);
@@ -47,6 +47,12 @@ public:
 
 void Player::pop(int index)
 {
+	if(index == 0)
+	{
+		last_pop = 0;
+		losing = true;
+		refresh_Hand();
+	}
 	for (std::vector<int>::iterator iter = hand.begin(); iter != hand.end(); iter++)
 	{
 		if (*iter == index)
@@ -60,11 +66,7 @@ void Player::pop(int index)
 			last_pop = 0;
 		}
 	}
-	if(last_pop == 0)
-	{
-		loosing = true;
-		refresh_Hand();
-	}
+
 }
 void Player::add(int add)
 {
@@ -155,6 +157,10 @@ int Player::pop_Random(int num, int token)
 	std::uniform_int_distribution<int> dis(0, count - 1);
 
 
+	if(losing == true)
+	{
+		return 0;
+	}
 	while (1)
 	{
 		item = dis(gen);
@@ -187,7 +193,8 @@ int Player::pop_Random(int num, int token)
 			break;
 		}
 	}
-	loosing = true;
+	losing = true;
+	last_pop =0;
 	return 0;
 }
 void Player::set_Bot_Start()

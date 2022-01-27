@@ -309,6 +309,7 @@ void *handle_clnt(void *arg)
 				send_Json(hand, clnt_sock, player);
 				if(Main_Room.check_Hand_Count(player.get_Room_Num()))
 				{
+					std::cout<<"hand 304 call\n";
 					hand["what"] = 304;
 					Main_Room.set_order(player.get_Room_Num());
 					hand["order"] = Main_Room.get_order(player.get_Room_Num());
@@ -356,12 +357,9 @@ void *handle_clnt(void *arg)
 				std::cout<<pop<<"\n";
 				send_Json(pop, clnt_sock, player);
 
-				sleep(200);
-
 				if(check301.size() !=0)
 				{
 					Swinner = check301.substr(0, check301.find("&"));
-					std::cout<< Swinner<<"\n";
 					Sloser = check301.substr(check301.find("&"));
 					Sloser = Sloser.substr(1);
 					std::cout<< Sloser<<"\n";
@@ -378,25 +376,41 @@ void *handle_clnt(void *arg)
 						continue;
 					}
 					winner["loser"] = Sloser;
+					if(Sloser.compare("Win")==0)
+					{
+						Json::Value total_Winner;
+						total_Winner["what"] = 302;
+						total_Winner["winner"] = Swinner;
+						Main_Room.game_End(player.get_Room_Num());
+						send_Json(total_Winner, player);
+						continue;
+					}
 					send_Json(winner, player);
 
-					sleep(200);
+					usleep(200000);
+					pos = Swinner.find("BOT");
 
-					if( ( pos = Swinner.find("BOT") ) != std::string::npos )
+					if( pos != -1 )
 					{
+						std::cout<<"bot 304\n";
 						order["what"] = 304;
 						Main_Room.set_order(player.get_Room_Num());
 						order["order"] = Main_Room.get_order(player.get_Room_Num());
 						order["token"] = Main_Room.get_token(player.get_Room_Num());
 
-						Json::Value chat;
-						chat["what"] = 200;
-						chat["who"]= "system";
-						std::string pop_Player_Name;
-						std::string combi = "\n";
-						int return_Pop;
+						send_Json(order, player);
+
+						usleep(200000);
+						Main_Room.re_Pop_Bot(player.get_Room_Num());
+
 						for(int i=0; i<8; i++)
 						{
+							Json::Value chat;
+							chat["what"] = 200;
+							chat["who"]= "system";
+							int return_Pop;
+							std::string pop_Player_Name;
+							std::string combi = "\n";
 							pop_Player_Name = Main_Room.get_room_Player(player.get_Room_Num(), i);
 							if(pop_Player_Name.compare("Locked") == 0)
 							{
@@ -407,22 +421,13 @@ void *handle_clnt(void *arg)
 							combi+="가 ";
 							combi+=std::to_string(return_Pop);
 							combi+="를 제출하였습니다.\n";
+							chat["chat"] = combi;
+							send_Json(chat, player);
+							usleep(200000);
 						}
-						chat["chat"] = combi;
-						send_Json(chat, player);
 					}
 					std::cout<<winner<<"\n";
 				}
-				break;
-			}
-			case 304: // 기준 숫자와 이상 이하 전달
-			{
-				Json::Value order;
-				order["what"] = 304;
-				Main_Room.set_order(player.get_Room_Num());
-				order["order"] = Main_Room.get_order(player.get_Room_Num());
-				order["token"] = Main_Room.get_token(player.get_Room_Num());
-				send_Json(order, player);
 				break;
 			}
 			case 306:
@@ -445,24 +450,28 @@ void *handle_clnt(void *arg)
 				winner["6"] = std::to_string(hand.at(5));
 				send_Json(winner, clnt_sock, player);
 
-				sleep(200);
+				usleep(200000);
 
+				std::cout<<"order 304 call\n";
 				order["what"] = 304;
 				Main_Room.set_order(player.get_Room_Num());
 				order["order"] = Main_Room.get_order(player.get_Room_Num());
 				order["token"] = Main_Room.get_token(player.get_Room_Num());
 				send_Json(order, player);
 
-				sleep(200);
+				usleep(200000);
 
-				Json::Value chat;
-				chat["what"] = 200;
-				chat["who"]= "system";
-				std::string pop_Player_Name;
-				std::string combi = "\n";
-				int return_Pop;
+
+				Main_Room.re_Pop_Bot(player.get_Room_Num());
+
 				for(int i=0; i<8; i++)
 				{
+					Json::Value chat;
+					chat["what"] = 200;
+					chat["who"]= "system";
+					int return_Pop;
+					std::string pop_Player_Name;
+					std::string combi = "\n";
 					pop_Player_Name = Main_Room.get_room_Player(player.get_Room_Num(), i);
 					if(pop_Player_Name.compare("Locked") == 0)
 					{
@@ -473,9 +482,10 @@ void *handle_clnt(void *arg)
 					combi+="가 ";
 					combi+=std::to_string(return_Pop);
 					combi+="를 제출하였습니다.\n";
+					chat["chat"] = combi;
+					send_Json(chat, player);
+					usleep(200000);
 				}
-				chat["chat"] = combi;
-				send_Json(chat, player);
 				break;
 			}
 			case 400: //방 만들기

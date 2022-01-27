@@ -62,6 +62,7 @@ public:
 	void add_Hand(int room_Num, Player player);
 	bool check_Hand_Count(int room_Num);
 	int return_last_Pop(int room_Num, int num);
+	void re_Pop_Bot(int room_Num);
 };
 
 Json::Value main_Room::show_Room_Detail(int room_Num)
@@ -148,7 +149,6 @@ std::string main_Room::set_pop(Player player)
 		std::cout<<SItem<<"\n";
 		output+="&";
 		output+= sbroom[player.get_Room_Num()].add_Item(SItem);
-		std::cout<<output<<"\n";
 	}
 	return output;
 }
@@ -288,5 +288,9 @@ bool main_Room::check_Hand_Count(int room_Num)
 	{
 		return false;
 	}
+}
+void main_Room::re_Pop_Bot(int room_Num)
+{
+	sbroom[room_Num].re_Pop_Bot();
 }
 #endif /* MAIN_ROOM_H_ */
