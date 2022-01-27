@@ -14,7 +14,7 @@
 #include<string.h>
 
 class Player {
-private:
+public:
 	int player_num = 0;
 	int room_Number = 0;
 	std::string player_Name;
@@ -23,9 +23,10 @@ private:
 	int bot_Count = 0;
 	std::vector<int> hand;
 	bool loosing = false;
-public:
+
 	void pop(int index);
 	void add(int add);
+	void set_Hand(std::vector<int> change);
 	std::vector<int> get_Hand();
 	int get_Player_Num();
 	void set_Player_Num(int num);
@@ -40,6 +41,8 @@ public:
 	int pop_Random(int num, int token);
 	void set_Bot_Start();
 	void refresh_Hand();
+	void set_Bot_End();
+	int check_Bot();
 };
 
 void Player::pop(int index)
@@ -57,11 +60,20 @@ void Player::pop(int index)
 			last_pop = 0;
 		}
 	}
+	if(last_pop == 0)
+	{
+		loosing = true;
+		refresh_Hand();
+	}
 }
 void Player::add(int add)
 {
 	hand.push_back(add);
 	sort(hand.begin(), hand.end());
+}
+void Player::set_Hand(std::vector<int> change)
+{
+	hand = change;
 }
 std::vector<int> Player::get_Hand()
 {
@@ -135,7 +147,7 @@ void Player::set_Random_Hand()
 int Player::pop_Random(int num, int token)
 {
 	int item;
-	int count = 6;
+	int count = hand.size();
 	int check = 0;
 
 	std::random_device rd;
@@ -149,13 +161,21 @@ int Player::pop_Random(int num, int token)
 		if (token == 0 && hand.at(item) >= num) // token == 0 : above
 		{
 			pop(hand.at(item));
-			count--;
 			return last_pop;
 		}
 		else if (token == 1 && hand.at(item) <= num) // token == 1 : below
 		{
 			pop(hand.at(item));
-			count--;
+			return last_pop;
+		}
+		else if(token ==2 && hand.at(item)%2 == 1)
+		{
+			pop(hand.at(item));
+			return last_pop;
+		}
+		else if(token == 3 && hand.at(item)%2 == 0)
+		{
+			pop(hand.at(item));
 			return last_pop;
 		}
 		else
@@ -167,6 +187,7 @@ int Player::pop_Random(int num, int token)
 			break;
 		}
 	}
+	loosing = true;
 	return 0;
 }
 void Player::set_Bot_Start()
@@ -177,6 +198,15 @@ void Player::set_Bot_Start()
 void Player::refresh_Hand()
 {
 	std::vector<int>().swap(hand);
+}
+void Player::set_Bot_End()
+{
+	this->refresh_Hand();
+	bot_Count = 0;
+}
+int Player::check_Bot()
+{
+	return bot_Count;
 }
 
 #endif /* PLAYER_H_ */
